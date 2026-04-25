@@ -1,0 +1,12 @@
+import { useEffect, useState } from "react";
+
+// Returns `value` after it has remained stable for `delay` ms. Useful for
+// gating expensive parse/search/render work off rapid input.
+export function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
