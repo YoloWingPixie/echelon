@@ -1,0 +1,18 @@
+:80 {
+	root * /srv
+	file_server
+
+	try_files {path} /index.html
+
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.openstreetmap.org https://*.basemaps.cartocdn.com https://tile.openstreetmap.org; connect-src 'self' https://nominatim.openstreetmap.org; font-src 'self'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	@static path *.js *.css *.svg *.png *.jpg *.jpeg *.gif *.ico *.woff *.woff2
+	header @static Cache-Control "public, max-age=31536000, immutable"
+}
