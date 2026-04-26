@@ -21,6 +21,11 @@ export interface UnitContextMenuProps {
   onDuplicate: () => void;
   onPasteAsChild: () => void;
   onEdit: () => void;
+  onExportJson: () => void;
+  onExportYaml: () => void;
+  onExportMarkdown: () => void;
+  onExportPng: () => void;
+  onExportPngTransparent: () => void;
   onDelete: () => void;
   onToggleCollapsed: () => void;
   onCollapseAll: () => void;
@@ -45,6 +50,11 @@ export function UnitContextMenu(props: UnitContextMenuProps) {
     onDuplicate,
     onPasteAsChild,
     onEdit,
+    onExportJson,
+    onExportYaml,
+    onExportMarkdown,
+    onExportPng,
+    onExportPngTransparent,
     onDelete,
     onToggleCollapsed,
     onCollapseAll,
@@ -184,6 +194,47 @@ export function UnitContextMenu(props: UnitContextMenuProps) {
             role="menuitem"
           >
             Edit
+          </button>
+          <div className="ctx-menu__sep" role="separator" />
+          <button
+            type="button"
+            className="ctx-menu__item"
+            onClick={handle(onExportJson)}
+            role="menuitem"
+          >
+            Export JSON
+          </button>
+          <button
+            type="button"
+            className="ctx-menu__item"
+            onClick={handle(onExportYaml)}
+            role="menuitem"
+          >
+            Export YAML
+          </button>
+          <button
+            type="button"
+            className="ctx-menu__item"
+            onClick={handle(onExportMarkdown)}
+            role="menuitem"
+          >
+            Export Markdown
+          </button>
+          <button
+            type="button"
+            className="ctx-menu__item"
+            onClick={handle(onExportPng)}
+            role="menuitem"
+          >
+            Export PNG
+          </button>
+          <button
+            type="button"
+            className="ctx-menu__item"
+            onClick={handle(onExportPngTransparent)}
+            role="menuitem"
+          >
+            Export PNG (transparent)
           </button>
           <button
             type="button"

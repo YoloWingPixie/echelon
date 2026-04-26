@@ -410,6 +410,36 @@ function flatten(node: NodeLayout, out: NodeLayout[]): void {
   for (const c of node.children) flatten(c, out);
 }
 
+export function layoutTreeBounds(
+  state: State,
+  heights: Map<string, number>,
+  layoutPref: LayoutPref,
+  config: Partial<LayoutConfig> = {},
+): { width: number; height: number } {
+  const cfg: LayoutConfig = { ...DEFAULT_LAYOUT_CONFIG, ...config };
+  let cursorX = cfg.canvasPad;
+  let maxY = cfg.canvasPad;
+  let maxX = cfg.canvasPad;
+  for (const rootId of state.rootIds) {
+    if (!state.units[rootId]) continue;
+    const tree = buildNode(state, rootId, 0, null, heights, layoutPref, cfg);
+    const bb = layoutSubtree(tree, cursorX, cfg.canvasPad, cfg);
+    if (bb.minX < cursorX) {
+      const dx = cursorX - bb.minX;
+      shiftSubtree(tree, dx);
+      bb.minX += dx;
+      bb.maxX += dx;
+    }
+    cursorX = bb.maxX + cfg.rootGapX;
+    maxX = Math.max(maxX, bb.maxX);
+    maxY = Math.max(maxY, bb.maxY);
+  }
+  return {
+    width: maxX + cfg.canvasPad,
+    height: maxY + cfg.canvasPad,
+  };
+}
+
 export function layoutTree(
   state: State,
   heights: Map<string, number>,

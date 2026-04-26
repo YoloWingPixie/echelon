@@ -118,6 +118,31 @@ export function descendantsOf(state: State, id: string): Set<string> {
   return out;
 }
 
+export function extractSubtreeState(state: State, rootId: string): State {
+  const ids = descendantsOf(state, rootId);
+  ids.add(rootId);
+
+  const units: Record<string, Unit> = {};
+  for (const id of ids) {
+    const u = state.units[id];
+    if (!u) continue;
+    units[id] = {
+      ...u,
+      parentId: id === rootId ? null : u.parentId,
+    };
+  }
+
+  return {
+    units,
+    rootIds: [rootId],
+    unassigned: [],
+    schemaId: state.schemaId,
+    prefix: state.prefix,
+    equipmentLibrary: state.equipmentLibrary,
+    equipmentSets: state.equipmentSets,
+  };
+}
+
 // Descendant count per unit — cached per state.units reference. The Tree
 // and Palette render calls this per-card-with-children to populate the
 // chevron badge; computing it via descendantsOf() each time allocates a

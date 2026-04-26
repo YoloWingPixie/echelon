@@ -73,6 +73,7 @@ import {
 import { parseShareHash, SHARE_HASH_PREFIX } from "./urlShare";
 import { tryCopyToClipboard } from "./clipboard";
 import { toYaml } from "./yamlFormat";
+import { exportSubtreeJson, exportSubtreeYaml, exportSubtreeMarkdown, exportSubtreePng, exportSubtreePngTransparent } from "./exportSubtree";
 import {
   UNASSIGNED,
   type Equipment,
@@ -834,6 +835,32 @@ function App() {
     [api, flashStatus],
   );
 
+  const handleExportSubtreeJson = useCallback((unitId: string) => {
+    exportSubtreeJson(api.state, unitId);
+  }, [api.state]);
+
+  const handleExportSubtreeYaml = useCallback((unitId: string) => {
+    exportSubtreeYaml(api.state, unitId);
+  }, [api.state]);
+
+  const handleExportSubtreeMarkdown = useCallback((unitId: string) => {
+    exportSubtreeMarkdown(api.state, unitId);
+  }, [api.state]);
+
+  const handleExportSubtreePng = useCallback((unitId: string) => {
+    exportSubtreePng(api.state, unitId, coordFormat).catch((err) => {
+      console.error("Subtree PNG export failed", err);
+      flashStatus("PNG export failed.");
+    });
+  }, [api.state, coordFormat, flashStatus]);
+
+  const handleExportSubtreePngTransparent = useCallback((unitId: string) => {
+    exportSubtreePngTransparent(api.state, unitId, coordFormat).catch((err) => {
+      console.error("Subtree PNG export failed", err);
+      flashStatus("PNG export failed.");
+    });
+  }, [api.state, coordFormat, flashStatus]);
+
   const handleUndo = useCallback(() => {
     if (!api.canUndo) return;
     api.undo();
@@ -1280,6 +1307,11 @@ function App() {
               ctxMenu.unitId && handlePasteAsChild(ctxMenu.unitId)
             }
             onEdit={() => ctxMenu.unitId && handleOpenEditor(ctxMenu.unitId)}
+            onExportJson={() => ctxMenu.unitId && handleExportSubtreeJson(ctxMenu.unitId)}
+            onExportYaml={() => ctxMenu.unitId && handleExportSubtreeYaml(ctxMenu.unitId)}
+            onExportMarkdown={() => ctxMenu.unitId && handleExportSubtreeMarkdown(ctxMenu.unitId)}
+            onExportPng={() => ctxMenu.unitId && handleExportSubtreePng(ctxMenu.unitId)}
+            onExportPngTransparent={() => ctxMenu.unitId && handleExportSubtreePngTransparent(ctxMenu.unitId)}
             onDelete={() => ctxMenu.unitId && handleContextDelete(ctxMenu.unitId)}
             onToggleCollapsed={() =>
               ctxMenu.unitId && handleToggleCollapsedAction(ctxMenu.unitId)

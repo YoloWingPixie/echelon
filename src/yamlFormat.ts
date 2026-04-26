@@ -105,7 +105,7 @@ const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 // Kebab-case slugifier: lowercase, strip non [a-z0-9], collapse runs of
 // separators to a single hyphen, trim leading/trailing hyphens.
-function slugify(raw: string): string {
+export function slugify(raw: string): string {
   const lower = raw.toLowerCase();
   const replaced = lower.replace(/[^a-z0-9]+/g, "-");
   const trimmed = replaced.replace(/^-+|-+$/g, "");

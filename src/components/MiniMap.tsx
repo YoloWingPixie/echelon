@@ -114,6 +114,7 @@ export function MiniMap({ api, canvasRef, zoom, layoutPref }: MiniMapProps) {
 
   useEffect(() => {
     if (!open) return;
+    updateViewport();
     const canvas = canvasRef.current;
     const onChange = () => updateViewport();
     canvas?.addEventListener("scroll", onChange, { passive: true });
