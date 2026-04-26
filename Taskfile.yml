@@ -42,6 +42,13 @@ tasks:
     cmds:
       - rm -rf node_modules dist
 
+  docker:
+    desc: Rebuild and restart the app in Docker (port 30093).
+    cmds:
+      - docker compose down
+      - docker compose build
+      - docker compose up -d
+
   docker:build:
     desc: Build the Docker image.
     cmds:
@@ -56,6 +63,11 @@ tasks:
     desc: Stop the Docker container.
     cmds:
       - docker compose down
+
+  docker:run:
+    desc: Alias for 'task docker'.
+    cmds:
+      - task: docker
 
   docker:logs:
     desc: Tail container logs.

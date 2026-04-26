@@ -16,6 +16,7 @@ interface Props {
   onHoverEnter?: (unitId: string) => void;
   onHoverLeave?: (unitId: string) => void;
   coordFormat?: CoordFormat;
+  collapsed?: boolean;
 }
 
 export function Palette({
@@ -28,6 +29,7 @@ export function Palette({
   onHoverEnter,
   onHoverLeave,
   coordFormat,
+  collapsed,
 }: Props) {
   const { draggingId, setDraggingId } = useDnd();
   const active = draggingId !== null;
@@ -72,7 +74,7 @@ export function Palette({
 
   return (
     <aside
-      className={`palette ${active ? "is-drop-active" : ""}`}
+      className={`palette ${active ? "is-drop-active" : ""}${collapsed ? " palette--collapsed" : ""}`}
       onDragOver={onDragOver}
       onDrop={onDrop}
     >

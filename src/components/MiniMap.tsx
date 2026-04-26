@@ -128,12 +128,12 @@ export function MiniMap({ api, canvasRef, zoom, layoutPref }: MiniMapProps) {
     (clientX: number, clientY: number, behavior: ScrollBehavior) => {
       const surface = surfaceRef.current;
       const canvas = canvasRef.current;
-      if (!surface || !canvas || scale === 0) return;
+      if (!surface || !canvas || scaledW === 0 || scaledH === 0) return;
       const rect = surface.getBoundingClientRect();
-      const localX = clientX - rect.left;
-      const localY = clientY - rect.top;
-      const targetLeft = (localX / scale) * zoom - canvas.clientWidth / 2;
-      const targetTop = (localY / scale) * zoom - canvas.clientHeight / 2;
+      const fractionX = (clientX - rect.left) / scaledW;
+      const fractionY = (clientY - rect.top) / scaledH;
+      const targetLeft = fractionX * canvas.scrollWidth - canvas.clientWidth / 2;
+      const targetTop = fractionY * canvas.scrollHeight - canvas.clientHeight / 2;
       const maxLeft = Math.max(0, canvas.scrollWidth - canvas.clientWidth);
       const maxTop = Math.max(0, canvas.scrollHeight - canvas.clientHeight);
       canvas.scrollTo({
@@ -142,7 +142,7 @@ export function MiniMap({ api, canvasRef, zoom, layoutPref }: MiniMapProps) {
         behavior,
       });
     },
-    [canvasRef, scale, zoom],
+    [canvasRef, scaledW, scaledH],
   );
 
   const onMouseDown = useCallback(

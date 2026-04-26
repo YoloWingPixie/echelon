@@ -22,6 +22,7 @@ import { ShareDialog } from "./components/ShareDialog";
 import { LibraryPage } from "./components/LibraryPage";
 import { MiniMap } from "./components/MiniMap";
 import { Palette } from "./components/Palette";
+import { PanelToggle } from "./components/PanelToggle";
 import { RootDropZone } from "./components/RootDropZone";
 import { SearchDialog } from "./components/SearchDialog";
 import { ShortcutsDialog } from "./components/ShortcutsDialog";
@@ -152,6 +153,8 @@ function App() {
   const dialogs = useDialogs();
   const statsOpen = dialogs.active === "stats";
   const canvasRef = useRef<HTMLElement | null>(null);
+  const [paletteCollapsed, setPaletteCollapsed] = useState(false);
+  const handleTogglePalette = useCallback(() => setPaletteCollapsed((c) => !c), []);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   // Id of the unit currently under the mouse pointer. Updated via
   // UnitCard's onMouseEnter/Leave callbacks. A ref (not state) because we
@@ -1117,7 +1120,7 @@ function App() {
           onOpenHelp={() => dialogs.open("help")}
         />
         {viewMode === "tree" ? (
-          <main className="main">
+          <main className={`main${paletteCollapsed ? " main--palette-collapsed" : ""}`}>
             <Palette
               api={api}
               onDropToUnassigned={handleDropToUnassigned}
@@ -1128,8 +1131,15 @@ function App() {
               onHoverEnter={handleHoverEnter}
               onHoverLeave={handleHoverLeave}
               coordFormat={coordFormat}
+              collapsed={paletteCollapsed}
             />
             <div className="canvas-wrap">
+              <PanelToggle
+                side="left"
+                collapsed={paletteCollapsed}
+                onToggle={handleTogglePalette}
+                label="unassigned"
+              />
               <section className="canvas" ref={canvasRef}>
                 <div
                   className="canvas__zoom"

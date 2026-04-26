@@ -664,6 +664,11 @@ button {
   grid-template-columns: 280px 1fr;
   min-height: 0;
   overflow: hidden;
+  transition: grid-template-columns 0.22s ease;
+}
+
+.main--palette-collapsed {
+  grid-template-columns: 0px 1fr;
 }
 
 /* ----- Palette (left column) ----- */
@@ -676,6 +681,59 @@ button {
   min-height: 0;
   overflow: hidden;
   transition: background 0.12s, box-shadow 0.12s;
+}
+
+.palette--collapsed {
+  border-right: none;
+}
+
+.palette--collapsed .palette__header,
+.palette--collapsed .palette__hint,
+.palette--collapsed .palette__list {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* ----- Panel toggle buttons ----- */
+
+.panel-toggle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  cursor: pointer;
+  z-index: 5;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+
+.panel-toggle:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.panel-toggle svg {
+  display: block;
+}
+
+.panel-toggle--left {
+  top: 12px;
+  left: 12px;
+}
+
+.panel-toggle--right {
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
 }
 
 .palette.is-drop-active {
@@ -1812,6 +1870,24 @@ button {
   min-height: 0;
   overflow: hidden;
   background: var(--surface);
+  transition: grid-template-columns 0.22s ease;
+}
+
+.map-view--collapsed {
+  grid-template-columns: 1fr 0px;
+}
+
+.map-view--collapsed .map-view__side {
+  overflow: hidden;
+  border-left: none;
+  padding: 0;
+}
+
+.map-view--collapsed .map-view__side-title,
+.map-view--collapsed .map-view__side-list,
+.map-view--collapsed .map-view__side-empty {
+  visibility: hidden;
+  opacity: 0;
 }
 
 .map-view__map {

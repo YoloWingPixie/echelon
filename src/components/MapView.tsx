@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,6 +8,7 @@ import { renderSymbolSVG } from "../symbol";
 import type { OrbatApi } from "../useOrbatState";
 import type { ResolvedTheme } from "../theme";
 import type { Unit } from "../types";
+import { PanelToggle } from "./PanelToggle";
 
 interface Props {
   api: OrbatApi;
@@ -62,12 +63,15 @@ function makeIcon(unit: Unit, schemaId: string): L.DivIcon {
 // inside a flex layout that hasn't settled. Invalidating once after mount
 // (and again on resize) fixes the "map shows only in the top-left corner"
 // failure mode.
-function MapSizeFix() {
+function MapSizeFix({ sideCollapsed }: { sideCollapsed?: boolean }) {
   const map = useMap();
+  const isMount = useRef(true);
   useEffect(() => {
-    const t = window.setTimeout(() => map.invalidateSize(), 50);
+    const delay = isMount.current ? 50 : 250;
+    isMount.current = false;
+    const t = window.setTimeout(() => map.invalidateSize(), delay);
     return () => window.clearTimeout(t);
-  }, [map]);
+  }, [map, sideCollapsed]);
   return null;
 }
 
@@ -100,6 +104,8 @@ function FitToUnits({ units }: { units: Unit[] }) {
 }
 
 export default function MapView({ api, theme, onOpenEditor }: Props) {
+  const [sideCollapsed, setSideCollapsed] = useState(false);
+  const handleToggleSide = useCallback(() => setSideCollapsed((c) => !c), []);
   const { placed, unplaced } = useMemo(() => {
     const placedArr: Unit[] = [];
     const unplacedArr: Unit[] = [];
@@ -115,7 +121,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
   const tileAttr = theme === "dark" ? DARK_ATTR : LIGHT_ATTR;
 
   return (
-    <div className="map-view">
+    <div className={`map-view${sideCollapsed ? " map-view--collapsed" : ""}`}>
       <div className="map-view__map">
         <MapContainer
           center={[20, 0]}
@@ -127,7 +133,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
           {/* Keying on theme forces a clean tile-layer swap when the user
               toggles light/dark — otherwise Leaflet caches the old URL. */}
           <TileLayer key={theme} url={tileUrl} attribution={tileAttr} />
-          <MapSizeFix />
+          <MapSizeFix sideCollapsed={sideCollapsed} />
           <FitToUnits units={placed} />
           {placed.map((u) => (
             <Marker
@@ -149,6 +155,12 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
             />
           ))}
         </MapContainer>
+        <PanelToggle
+          side="right"
+          collapsed={sideCollapsed}
+          onToggle={handleToggleSide}
+          label="unplaced"
+        />
       </div>
       <aside className="map-view__side">
         <h3 className="map-view__side-title">
