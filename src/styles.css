@@ -694,9 +694,9 @@ button {
   opacity: 0;
 }
 
-/* ----- Panel toggle buttons ----- */
+/* ----- Overlay icon buttons (shared base for map/canvas controls) ----- */
 
-.panel-toggle {
+.overlay-btn {
   position: absolute;
   width: 28px;
   height: 28px;
@@ -707,21 +707,20 @@ button {
   border: 1px solid var(--border);
   color: var(--text-soft);
   cursor: pointer;
-  z-index: 5;
   padding: 0;
   border-radius: 50%;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
-.panel-toggle:hover {
+.overlay-btn:hover {
   background: var(--surface-alt);
   color: var(--text);
   border-color: var(--border-strong);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.panel-toggle svg {
+.overlay-btn svg {
   display: block;
 }
 
@@ -734,6 +733,23 @@ button {
   top: 12px;
   right: 12px;
   z-index: 1000;
+}
+
+.map-lock {
+  top: 48px;
+  right: 12px;
+  z-index: 1000;
+}
+
+.map-lock--active {
+  background: var(--info-soft);
+  color: var(--info);
+  border-color: var(--info);
+}
+
+.map-lock--active:hover {
+  background: var(--info-soft);
+  color: var(--info);
 }
 
 .palette.is-drop-active {

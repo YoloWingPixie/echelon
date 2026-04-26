@@ -106,6 +106,8 @@ function FitToUnits({ units }: { units: Unit[] }) {
 export default function MapView({ api, theme, onOpenEditor }: Props) {
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const handleToggleSide = useCallback(() => setSideCollapsed((c) => !c), []);
+  const [locked, setLocked] = useState(true);
+  const handleToggleLock = useCallback(() => setLocked((l) => !l), []);
   const { placed, unplaced } = useMemo(() => {
     const placedArr: Unit[] = [];
     const unplacedArr: Unit[] = [];
@@ -140,7 +142,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
               key={u.id}
               position={[u.coordinates!.lat, u.coordinates!.lon]}
               icon={getIcon(u, schemaId)}
-              draggable
+              draggable={!locked}
               eventHandlers={{
                 dragend: (e) => {
                   const { lat, lng } = (
@@ -155,6 +157,18 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
             />
           ))}
         </MapContainer>
+        <button
+          type="button"
+          className={`overlay-btn map-lock${locked ? " map-lock--active" : ""}`}
+          onClick={handleToggleLock}
+          title={locked ? "Unlock unit positions" : "Lock unit positions"}
+          aria-label={locked ? "Unlock unit positions" : "Lock unit positions"}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d={locked ? "M7 11V7a5 5 0 0 1 10 0v4" : "M7 11V7a5 5 0 0 1 9.9-1"} />
+          </svg>
+        </button>
         <PanelToggle
           side="right"
           collapsed={sideCollapsed}

@@ -11,7 +11,7 @@ export function PanelToggle({ side, collapsed, onToggle, label }: Props) {
   return (
     <button
       type="button"
-      className={`panel-toggle panel-toggle--${side}`}
+      className={`overlay-btn panel-toggle--${side}`}
       onClick={onToggle}
       title={title}
       aria-label={title}
