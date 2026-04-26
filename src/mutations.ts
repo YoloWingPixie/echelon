@@ -243,6 +243,7 @@ export function createUnit(state: State, fields: UnitFields): State {
   const id = newUnitId();
   const location = normalizeOptionalString(fields.location);
   const notes = normalizeOptionalString(fields.notes);
+  const pfx = normalizeOptionalString(fields.prefix);
   const unit: Unit = {
     id,
     name: fields.name,
@@ -267,6 +268,7 @@ export function createUnit(state: State, fields: UnitFields): State {
       ? { personnelOverride: Math.floor(fields.personnelOverride) }
       : {}),
     ...(fields.readiness ? { readiness: fields.readiness } : {}),
+    ...(pfx !== undefined ? { prefix: pfx } : {}),
   };
   const next = cloneState(state);
   next.units[id] = unit;
@@ -319,6 +321,11 @@ export function updateUnit(
     const notes = normalizeOptionalString(fields.notes);
     if (notes !== undefined) merged.notes = notes;
     else delete merged.notes;
+  }
+  if ("prefix" in fields) {
+    const pfx = normalizeOptionalString(fields.prefix);
+    if (pfx !== undefined) merged.prefix = pfx;
+    else delete merged.prefix;
   }
   // Invalid / negative clears — falls back to the schema default on read.
   if ("personnelOverride" in fields) {
@@ -625,6 +632,7 @@ function cloneUnitDeep(u: Unit): Unit {
       ? { personnelOverride: u.personnelOverride }
       : {}),
     ...(u.readiness ? { readiness: u.readiness } : {}),
+    ...(u.prefix ? { prefix: u.prefix } : {}),
   };
 }
 
@@ -749,6 +757,7 @@ export function pasteSubtree(
         ? { personnelOverride: src.personnelOverride }
         : {}),
       ...(src.readiness ? { readiness: src.readiness } : {}),
+      ...(src.prefix ? { prefix: src.prefix } : {}),
     };
     next.units[newId] = copy;
   }

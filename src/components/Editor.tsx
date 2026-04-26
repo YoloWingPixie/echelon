@@ -89,6 +89,7 @@ interface FormState {
   // literals. Dropdown value binds directly to this string and formToFields
   // normalizes it back to CRating | undefined on save.
   readiness: "" | CRating;
+  prefix: string;
 }
 
 function blankForm(defaultEchelon: Echelon): FormState {
@@ -106,6 +107,7 @@ function blankForm(defaultEchelon: Echelon): FormState {
     notes: "",
     personnelOverrideText: "",
     readiness: "",
+    prefix: "",
   };
 }
 
@@ -135,6 +137,7 @@ function formFromUnit(u: Unit): FormState {
         ? String(u.personnelOverride)
         : "",
     readiness: u.readiness ?? "",
+    prefix: u.prefix ?? "",
   };
 }
 
@@ -158,6 +161,7 @@ function formToFields(f: FormState): UnitFields {
     // "" (the Unrated option) normalizes to undefined; mutation layer then
     // drops the key entirely rather than storing "".
     readiness: f.readiness === "" ? undefined : f.readiness,
+    prefix: normalizeOptionalString(f.prefix),
   };
 }
 
@@ -276,6 +280,7 @@ function EditorBody({
             ...existing,
             short: form.short,
             echelon: form.echelon,
+            prefix: normalizeOptionalString(form.prefix),
           },
         },
       };
@@ -715,6 +720,26 @@ function EditorBody({
             placeholder="Scratch space — task org notes, readiness, comments, etc."
           />
         </label>
+        {isEdit &&
+          units[(mode as Extract<EditorMode, { kind: "edit" }>).unitId]
+            ?.parentId === null ? (
+          <label className="field field--wide">
+            <span className="field__label">Slug prefix</span>
+            <input
+              className="field__input"
+              type="text"
+              value={form.prefix}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, prefix: e.target.value }))
+              }
+              placeholder={
+                state.prefix
+                  ? `${state.prefix} (document default)`
+                  : "inherited from document"
+              }
+            />
+          </label>
+        ) : null}
         <div className="field field--wide">
           <div className="editor__equipment-header">
             <span className="field__label">NATO symbol</span>

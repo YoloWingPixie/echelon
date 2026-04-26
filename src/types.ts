@@ -183,6 +183,10 @@ export interface Unit {
   // present and non-empty, with the full text in the indicator's tooltip.
   // Absent / empty string = no notes.
   notes?: string;
+  // Optional per-tree slug prefix. Only meaningful on root units (parentId
+  // null). Overrides the document-level State.prefix for this root's subtree.
+  // Absent / empty = inherit the document default.
+  prefix?: string;
   // Optional per-unit personnel count. Integer >= 0. When set, overrides the
   // schema's echelon-level personnelDefault for this unit. Undefined = inherit
   // the schema default (0 if the echelon has no default or isn't in the

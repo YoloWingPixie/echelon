@@ -88,7 +88,7 @@ function computeFullSlug(
   const seg = unitSegment(unit, state.schemaId);
   const parentSlug =
     unit.parentId === null || unit.parentId === UNASSIGNED
-      ? prefixSegments(state.prefix).join(".")
+      ? prefixSegments(unit.prefix ?? state.prefix).join(".")
       : computeFullSlug(state, unit.parentId, cache, stack);
   stack.delete(unitId);
 

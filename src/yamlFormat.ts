@@ -204,6 +204,8 @@ function buildExportUnit(
     if (parentSlug) out.parent = parentSlug;
   }
 
+  if (u.prefix && u.prefix.trim().length > 0) out.prefix = u.prefix;
+
   if (u.coordinates) {
     out.coordinates = { lat: u.coordinates.lat, lon: u.coordinates.lon };
   }
@@ -308,6 +310,7 @@ interface YamlUnit {
   color?: unknown;
   parent?: unknown;
   unassigned?: unknown;
+  prefix?: unknown;
   coordinates?: unknown;
   location?: unknown;
   notes?: unknown;
@@ -759,6 +762,11 @@ export function fromYaml(text: string): FromYamlResult {
 
     const collapsed = raw.collapsed === true;
 
+    const unitPrefix =
+      typeof raw.prefix === "string" && raw.prefix.trim().length > 0
+        ? raw.prefix.trim()
+        : undefined;
+
     const symbol = parseSymbol(raw.symbol, label, warnings);
 
     const equipment: UnitEquipment[] = [];
@@ -793,6 +801,7 @@ export function fromYaml(text: string): FromYamlResult {
       ...(typeof personnelOverride === "number" ? { personnelOverride } : {}),
       ...(collapsed ? { collapsed } : {}),
       ...(symbol ? { symbol } : {}),
+      ...(unitPrefix ? { prefix: unitPrefix } : {}),
     };
 
     units[id] = unit;
