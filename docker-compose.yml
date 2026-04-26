@@ -1,0 +1,6 @@
+services:
+  echelon:
+    build: .
+    ports:
+      - "30093:80"
+    restart: unless-stopped

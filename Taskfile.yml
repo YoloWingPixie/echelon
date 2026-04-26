@@ -41,3 +41,23 @@ tasks:
     desc: Remove node_modules and dist.
     cmds:
       - rm -rf node_modules dist
+
+  docker:build:
+    desc: Build the Docker image.
+    cmds:
+      - docker compose build
+
+  docker:up:
+    desc: Start the app in Docker (port 30093).
+    cmds:
+      - docker compose up -d
+
+  docker:down:
+    desc: Stop the Docker container.
+    cmds:
+      - docker compose down
+
+  docker:logs:
+    desc: Tail container logs.
+    cmds:
+      - docker compose logs -f
