@@ -6,9 +6,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { getEchelonPersonnelDefault, getSchema } from "../schemas";
+import { getEchelonPersonnelDefault, getSchema, SCHEMAS } from "../schemas";
 import { subtreePersonnel } from "../personnel";
-import { unitSegment, fullSlug } from "../slug";
+import { unitSegment, fullSlug, resolveSchemaId } from "../slug";
 import { cloneSymbol, renderSymbolSVG } from "../symbol";
 import { useDebouncedValue } from "../useDebouncedValue";
 import {
@@ -90,6 +90,8 @@ interface FormState {
   // normalizes it back to CRating | undefined on save.
   readiness: "" | CRating;
   prefix: string;
+  schemaOverride: string;
+  hidePrefix: boolean;
   hideEchelonSlug: boolean;
 }
 
@@ -109,6 +111,8 @@ function blankForm(defaultEchelon: Echelon): FormState {
     personnelOverrideText: "",
     readiness: "",
     prefix: "",
+    schemaOverride: "",
+    hidePrefix: false,
     hideEchelonSlug: false,
   };
 }
@@ -140,6 +144,8 @@ function formFromUnit(u: Unit): FormState {
         : "",
     readiness: u.readiness ?? "",
     prefix: u.prefix ?? "",
+    schemaOverride: u.schemaOverride ?? "",
+    hidePrefix: u.hidePrefix ?? false,
     hideEchelonSlug: u.hideEchelonSlug ?? false,
   };
 }
@@ -165,6 +171,8 @@ function formToFields(f: FormState): UnitFields {
     // drops the key entirely rather than storing "".
     readiness: f.readiness === "" ? undefined : f.readiness,
     prefix: normalizeOptionalString(f.prefix),
+    schemaOverride: normalizeOptionalString(f.schemaOverride),
+    hidePrefix: f.hidePrefix || undefined,
     hideEchelonSlug: f.hideEchelonSlug || undefined,
   };
 }
@@ -210,14 +218,14 @@ function EditorBody({
   onSaveEdit,
   onDelete,
 }: Props) {
-  const { units, schemaId } = state;
-  const schema = getSchema(schemaId);
-  // Defensive: schema.echelons could be empty in custom schemas later. Falling
-  // back to "" keeps the form usable; user can still type-overwrite via the
-  // dropdown options when present.
-  const defaultEchelon = schema.echelons[0]?.label ?? "";
+  const { units } = state;
+  const baseSchemaId =
+    mode.kind === "edit"
+      ? resolveSchemaId(state, mode.unitId)
+      : state.schemaId;
+  const baseSchema = getSchema(baseSchemaId);
+  const defaultEchelon = baseSchema.echelons[0]?.label ?? "";
 
-  // mode is always create or edit here (closed is filtered above).
   const initial: FormState =
     mode.kind === "edit"
       ? units[mode.unitId]
@@ -226,6 +234,14 @@ function EditorBody({
       : blankForm(defaultEchelon);
 
   const [form, setForm] = useState<FormState>(initial);
+
+  // Clear redundant override if it matches the document default.
+  const schemaOverride =
+    form.schemaOverride && form.schemaOverride !== state.schemaId
+      ? form.schemaOverride
+      : "";
+  const effectiveSchemaId = schemaOverride || baseSchemaId;
+  const schema = getSchema(effectiveSchemaId);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [symbolBuilderOpen, setSymbolBuilderOpen] = useState(false);
@@ -264,7 +280,7 @@ function EditorBody({
       parentId: UNASSIGNED,
       hideEchelonSlug: form.hideEchelonSlug,
     },
-    schemaId,
+    effectiveSchemaId,
   );
 
   let previewSlug: string;
@@ -285,6 +301,8 @@ function EditorBody({
             short: form.short,
             echelon: form.echelon,
             prefix: normalizeOptionalString(form.prefix),
+            schemaOverride: normalizeOptionalString(form.schemaOverride),
+            hidePrefix: form.hidePrefix || undefined,
             hideEchelonSlug: form.hideEchelonSlug || undefined,
           },
         },
@@ -586,6 +604,7 @@ function EditorBody({
             form={form}
             setForm={setForm}
             state={state}
+            effectiveSchemaId={effectiveSchemaId}
             mode={mode}
           />
         </div>
@@ -728,6 +747,7 @@ function EditorBody({
         {isEdit &&
           units[(mode as Extract<EditorMode, { kind: "edit" }>).unitId]
             ?.parentId === null ? (
+          <>
           <label className="field field--wide">
             <span className="field__label">Slug prefix</span>
             <input
@@ -744,6 +764,36 @@ function EditorBody({
               }
             />
           </label>
+          <label className="field field--wide">
+            <span className="field__label">Schema override</span>
+            <select
+              className="field__input"
+              value={form.schemaOverride}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, schemaOverride: e.target.value }))
+              }
+            >
+              <option value="">
+                {getSchema(state.schemaId).name} (document default)
+              </option>
+              {SCHEMAS.filter((s) => s.id !== state.schemaId).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field field--wide editor__checkbox-field">
+            <input
+              type="checkbox"
+              checked={form.hidePrefix}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, hidePrefix: e.target.checked }))
+              }
+            />
+            <span className="field__label">Hide prefix in slug</span>
+          </label>
+          </>
         ) : null}
         <label className="field field--wide editor__checkbox-field">
           <input
@@ -789,7 +839,7 @@ function EditorBody({
             <EditorSymbolPreview
               symbol={form.symbol}
               unit={buildPreviewUnit(form, mode.kind === "edit" ? mode.unitId : "__preview__")}
-              schemaId={schemaId}
+              schemaId={effectiveSchemaId}
             />
           ) : (
             <div className="editor__symbol-empty">
@@ -841,7 +891,7 @@ function EditorBody({
             form,
             mode.kind === "edit" ? mode.unitId : "__preview__",
           )}
-          schemaId={schemaId}
+          schemaId={effectiveSchemaId}
           onCancel={() => setSymbolBuilderOpen(false)}
           onSave={(next) => {
             setForm((f) => ({ ...f, symbol: next }));
@@ -871,15 +921,17 @@ function EditorPersonnel({
   form,
   setForm,
   state,
+  effectiveSchemaId,
   mode,
 }: {
   form: FormState;
   setForm: Dispatch<SetStateAction<FormState>>;
   state: State;
+  effectiveSchemaId: string;
   mode: EditorMode;
 }) {
   const schemaDefault = getEchelonPersonnelDefault(
-    state.schemaId,
+    effectiveSchemaId,
     form.echelon,
   );
   const parsedOverride = parsePersonnelOverride(form.personnelOverrideText);

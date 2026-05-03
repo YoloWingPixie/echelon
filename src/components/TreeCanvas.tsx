@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { LayoutPref } from "../layout";
 import { descendantCount as descendantCountQ } from "../mutations";
-import { fullSlug } from "../slug";
+import { fullSlug, resolveSchemaId } from "../slug";
 import type { CoordFormat } from "../coords";
 import type { OrbatApi } from "../useOrbatState";
 import { layoutTree, type NodeLayout } from "../treeLayoutV2";
@@ -216,7 +216,7 @@ function PositionedCard({
       <UnitCard
         unit={unit}
         fullSlug={slug}
-        schemaId={api.state.schemaId}
+        schemaId={resolveSchemaId(api.state, node.id)}
         onDropUnit={onDropUnit}
         isValidTarget={isValidTarget}
         onOpenEditor={onOpenEditor}

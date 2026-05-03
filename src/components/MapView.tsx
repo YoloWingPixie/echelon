@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { isValidLocation } from "../coords";
 import { escapeHtml } from "../format";
 import { geocodeLocation } from "../geocode";
-import { fullSlug } from "../slug";
+import { fullSlug, resolveSchemaId } from "../slug";
 import { renderSymbolSVG } from "../symbol";
 import type { OrbatApi } from "../useOrbatState";
 import type { ResolvedTheme } from "../theme";
@@ -283,8 +283,6 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
     );
   }, [placed, filterSetId]);
 
-  const schemaId = api.state.schemaId;
-
   const tileUrl = theme === "dark" ? DARK_TILES : LIGHT_TILES;
   const tileAttr = theme === "dark" ? DARK_ATTR : LIGHT_ATTR;
 
@@ -308,7 +306,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
             <Marker
               key={u.id}
               position={[u.coordinates!.lat, u.coordinates!.lon]}
-              icon={getIcon(u, schemaId)}
+              icon={getIcon(u, resolveSchemaId(api.state, u.id))}
               draggable={!locked}
               eventHandlers={{
                 dragend: (e) => {

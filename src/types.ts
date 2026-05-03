@@ -187,6 +187,13 @@ export interface Unit {
   // null). Overrides the document-level State.prefix for this root's subtree.
   // Absent / empty = inherit the document default.
   prefix?: string;
+  // Optional per-tree schema override. Only meaningful on root units
+  // (parentId null). Overrides State.schemaId for slug generation and
+  // echelon display in this root's subtree. Absent = inherit document schema.
+  schemaOverride?: string;
+  // When true, the slug prefix (document or per-tree) is omitted from this
+  // root's full slug. Only meaningful on root units (parentId null).
+  hidePrefix?: boolean;
   // Optional per-unit personnel count. Integer >= 0. When set, overrides the
   // schema's echelon-level personnelDefault for this unit. Undefined = inherit
   // the schema default (0 if the echelon has no default or isn't in the

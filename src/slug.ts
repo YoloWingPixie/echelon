@@ -11,8 +11,22 @@
 import { getEchelonSlug } from "./schemas";
 import { UNASSIGNED, type State, type Unit } from "./types";
 
+export function resolveSchemaId(state: State, unitId: string): string {
+  let current = state.units[unitId];
+  const visited = new Set<string>();
+  while (current) {
+    if (current.parentId === null || current.parentId === UNASSIGNED) {
+      return current.schemaOverride || state.schemaId;
+    }
+    if (visited.has(current.parentId)) break;
+    visited.add(current.parentId);
+    current = state.units[current.parentId];
+  }
+  return state.schemaId;
+}
+
 export function sanitizeShort(short: string): string {
-  return short.toLowerCase().replace(/[^a-z0-9 _-]/g, "");
+  return short.toLowerCase().replace(/[^a-z0-9_-]/g, "");
 }
 
 export function unitSegment(unit: Unit, schemaId: string): string {
@@ -21,6 +35,14 @@ export function unitSegment(unit: Unit, schemaId: string): string {
     : getEchelonSlug(schemaId, unit.echelon);
   const designator = sanitizeShort(unit.short ?? "");
   if (!designator && !echelonSlug) return "";
+  if (echelonSlug && designator.length > echelonSlug.length) {
+    const atEnd = designator.endsWith(echelonSlug) &&
+      !/[a-z]/.test(designator[designator.length - echelonSlug.length - 1]);
+    const atStart = designator.startsWith(echelonSlug) &&
+      !/[a-z]/.test(designator[echelonSlug.length]);
+    if (atEnd || atStart) return designator;
+  }
+  if (echelonSlug && designator === echelonSlug) return designator;
   return `${designator}${echelonSlug}`;
 }
 
@@ -87,10 +109,12 @@ function computeFullSlug(
   if (!unit) return "";
 
   stack.add(unitId);
-  const seg = unitSegment(unit, state.schemaId);
+  const seg = unitSegment(unit, resolveSchemaId(state, unitId));
   const parentSlug =
     unit.parentId === null || unit.parentId === UNASSIGNED
-      ? prefixSegments(unit.prefix ?? state.prefix).join(".")
+      ? unit.hidePrefix
+        ? ""
+        : prefixSegments(unit.prefix ?? state.prefix).join(".")
       : computeFullSlug(state, unit.parentId, cache, stack);
   stack.delete(unitId);
 

@@ -2,6 +2,7 @@
 // This module is the ONLY place allowed to touch parentId / rootIds / unassigned.
 
 import { getEchelonLevel, getSchema } from "./schemas";
+import { resolveSchemaId } from "./slug";
 import {
   UNASSIGNED,
   newEquipmentId,
@@ -424,6 +425,9 @@ export function setSchema(state: State, schemaId: string): State {
   const next = cloneState(state);
   next.schemaId = schemaId;
   for (const id in next.units) {
+    // Skip units whose root has a per-tree schema override — those echelon
+    // labels belong to the override schema, not the document default.
+    if (resolveSchemaId(state, id) !== oldSchemaId) continue;
     const u = next.units[id];
     const level = getEchelonLevel(oldSchemaId, u.echelon);
     if (level === null) continue;

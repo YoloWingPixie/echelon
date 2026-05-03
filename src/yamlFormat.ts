@@ -213,6 +213,8 @@ function buildExportUnit(
   if (u.notes && u.notes.length > 0) out.notes = u.notes;
   if (u.readiness) out.readiness = u.readiness;
   if (u.hideEchelonSlug) out.hideEchelonSlug = true;
+  if (u.schemaOverride) out.schemaOverride = u.schemaOverride;
+  if (u.hidePrefix) out.hidePrefix = true;
   if (typeof u.personnelOverride === "number") {
     out.personnelOverride = u.personnelOverride;
   }
@@ -319,6 +321,8 @@ interface YamlUnit {
   personnelOverride?: unknown;
   collapsed?: unknown;
   hideEchelonSlug?: unknown;
+  schemaOverride?: unknown;
+  hidePrefix?: unknown;
   symbol?: unknown;
   equipment?: unknown;
 }
@@ -764,6 +768,12 @@ export function fromYaml(text: string): FromYamlResult {
 
     const collapsed = raw.collapsed === true;
     const hideEchelonSlug = raw.hideEchelonSlug === true;
+    const hidePrefix = raw.hidePrefix === true;
+
+    const schemaOverride =
+      typeof raw.schemaOverride === "string" && raw.schemaOverride.trim().length > 0
+        ? raw.schemaOverride.trim()
+        : undefined;
 
     const unitPrefix =
       typeof raw.prefix === "string" && raw.prefix.trim().length > 0
@@ -804,6 +814,8 @@ export function fromYaml(text: string): FromYamlResult {
       ...(typeof personnelOverride === "number" ? { personnelOverride } : {}),
       ...(collapsed ? { collapsed } : {}),
       ...(hideEchelonSlug ? { hideEchelonSlug } : {}),
+      ...(schemaOverride ? { schemaOverride } : {}),
+      ...(hidePrefix ? { hidePrefix } : {}),
       ...(symbol ? { symbol } : {}),
       ...(unitPrefix ? { prefix: unitPrefix } : {}),
     };
