@@ -18,6 +18,8 @@ interface Props {
   onExportYaml: () => void;
   onOpenImport: () => void;
   onOpenImportYaml: () => void;
+  onOpenSave: () => void;
+  onOpenLoad: () => void;
   onOpenSchemaModal: () => void;
   onOpenShare: () => void;
   status: string | null;
@@ -64,6 +66,8 @@ export function TopBar({
   onExportYaml,
   onOpenImport,
   onOpenImportYaml,
+  onOpenSave,
+  onOpenLoad,
   onOpenSchemaModal,
   onOpenShare,
   status,
@@ -140,21 +144,34 @@ export function TopBar({
       },
       { id: "sep-0", separator: true, label: "" },
       {
+        id: "save",
+        label: "Save ORBAT\u2026",
+        sublabel: "Save to browser storage",
+        onClick: onOpenSave,
+      },
+      {
+        id: "load",
+        label: "Load ORBAT\u2026",
+        sublabel: "Load from browser storage",
+        onClick: onOpenLoad,
+      },
+      { id: "sep-save", separator: true, label: "" },
+      {
         id: "export-json",
         label: "Export JSON",
-        sublabel: "Copy state to clipboard",
+        sublabel: "Download full state as file",
         onClick: onExport,
       },
       {
         id: "export-yaml",
         label: "Export YAML",
-        sublabel: "Copy logical ORBAT to clipboard",
+        sublabel: "Download logical ORBAT as file",
         onClick: onExportYaml,
       },
       {
         id: "export-md",
         label: "Export Markdown",
-        sublabel: "Copy outline to clipboard",
+        sublabel: "Download outline as file",
         onClick: onExportMarkdown,
       },
       {
@@ -176,6 +193,8 @@ export function TopBar({
       onOpenShare,
       onOpenImport,
       onOpenImportYaml,
+      onOpenSave,
+      onOpenLoad,
       onOpenSchemaModal,
       onExport,
       onExportYaml,

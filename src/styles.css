@@ -3170,6 +3170,110 @@ button {
   border-radius: 4px;
 }
 
+/* ----- Save dialog ----- */
+
+.save-dialog {
+  max-width: 480px;
+  width: min(95vw, 480px);
+}
+
+.save-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 6px;
+}
+
+/* ----- Load dialog ----- */
+
+.load-dialog {
+  max-width: 640px;
+  width: min(95vw, 640px);
+}
+
+.load-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px 6px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.load-dialog__empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 0;
+  margin: 0;
+}
+
+.load-dialog__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.load-dialog__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.load-dialog__item:hover {
+  border-color: var(--border-strong);
+}
+
+.load-dialog__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.load-dialog__item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.load-dialog__item-meta {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.load-dialog__item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.load-dialog__rename-input {
+  font-size: 13px;
+  padding: 2px 6px;
+}
+
+.btn--danger-text {
+  color: var(--danger);
+}
+
+.btn--danger-text:hover {
+  background: var(--danger-soft);
+}
+
 /* ----- Generic dropdown menu (schema picker, File menu, Paste menu) ----- */
 
 .menu {

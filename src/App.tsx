@@ -17,6 +17,8 @@ import {
 import { ExportDialog } from "./components/ExportDialog";
 import { ImportDialog } from "./components/ImportDialog";
 import { ImportYamlDialog } from "./components/ImportYamlDialog";
+import { LoadDialog } from "./components/LoadDialog";
+import { SaveDialog } from "./components/SaveDialog";
 import { SchemaModal } from "./components/SchemaModal";
 import { ShareDialog } from "./components/ShareDialog";
 import { LibraryPage } from "./components/LibraryPage";
@@ -35,12 +37,13 @@ import { ancestorsOf, descendantCount as descendantCountQ } from "./mutations";
 import { computeStats } from "./stats";
 import { buildMarkdown } from "./exportMarkdown";
 import {
+  defaultExportBasename,
   defaultExportFilename,
   exportOrbatPng,
   triggerBlobDownload,
   type ExportPngOptions,
 } from "./exportPng";
-import { escapeHtml } from "./format";
+
 import { useDialogs } from "./useDialogs";
 import { useOrbatState } from "./useOrbatState";
 import {
@@ -72,6 +75,8 @@ import {
 } from "./layout";
 import { parseShareHash, SHARE_HASH_PREFIX } from "./urlShare";
 import { tryCopyToClipboard } from "./clipboard";
+import { createSave } from "./savedOrbats";
+import { normalizeLoadedState } from "./storage";
 import { toYaml } from "./yamlFormat";
 import { exportSubtreeJson, exportSubtreeYaml, exportSubtreeMarkdown, exportSubtreePng, exportSubtreePngTransparent } from "./exportSubtree";
 import {
@@ -84,37 +89,6 @@ import {
 
 const STATUS_TIMEOUT_MS = 2500;
 
-interface CopyOrPopupMessages {
-  copied: string;
-  popup: string;
-  failed: string;
-  popupTitle: string;
-}
-
-function copyOrPopup(
-  text: string,
-  msgs: CopyOrPopupMessages,
-  flashStatus: (s: string) => void,
-): void {
-  void tryCopyToClipboard(text).then((ok) => {
-    if (ok) {
-      flashStatus(msgs.copied);
-      return;
-    }
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(
-        `<pre style="white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;padding:16px">${escapeHtml(
-          text,
-        )}</pre>`,
-      );
-      w.document.title = msgs.popupTitle;
-      flashStatus(msgs.popup);
-    } else {
-      flashStatus(msgs.failed);
-    }
-  });
-}
 
 // When focus is inside an editable field, global shortcuts (Ctrl+Z, Ctrl+C,
 // Ctrl+X) must fall through to native text editing instead of being hijacked
@@ -432,22 +406,16 @@ function App() {
   }, [api, flashStatus]);
 
   const handleExport = useCallback(() => {
-    copyOrPopup(
-      JSON.stringify(api.state, null, 2),
-      {
-        copied: "Exported JSON copied to clipboard.",
-        popup: "Exported JSON opened in new window.",
-        failed: "Export failed: clipboard and popup both blocked.",
-        popupTitle: "ORBAT export",
-      },
-      flashStatus,
-    );
+    const text = JSON.stringify(api.state, null, 2);
+    const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+    triggerBlobDownload(blob, `${defaultExportBasename()}.json`);
+    flashStatus("JSON exported.");
   }, [api.state, flashStatus]);
 
   const handleExportMarkdown = useCallback(() => {
     const text = buildMarkdown(api.state);
     const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
-    triggerBlobDownload(blob, `${defaultExportFilename().replace(/\.png$/, "")}.md`);
+    triggerBlobDownload(blob, `${defaultExportBasename()}.md`);
     // Also try the clipboard as a bonus so users can paste directly.
     void tryCopyToClipboard(text).then((ok) => {
       flashStatus(
@@ -547,17 +515,54 @@ function App() {
   // ---- Export YAML ----
 
   const handleExportYaml = useCallback(() => {
-    copyOrPopup(
-      toYaml(api.state),
-      {
-        copied: "Exported YAML copied to clipboard.",
-        popup: "Exported YAML opened in new window.",
-        failed: "YAML export failed: clipboard and popup both blocked.",
-        popupTitle: "ORBAT YAML export",
-      },
-      flashStatus,
-    );
+    const text = toYaml(api.state);
+    const blob = new Blob([text], { type: "text/yaml;charset=utf-8" });
+    triggerBlobDownload(blob, `${defaultExportBasename()}.yaml`);
+    flashStatus("YAML exported.");
   }, [api.state, flashStatus]);
+
+  // ---- Save / Load ORBAT ----
+
+  const handleOpenSave = useCallback(() => {
+    dialogs.open("save");
+  }, []);
+
+  const handleCancelSave = useCallback(() => {
+    dialogs.close();
+  }, []);
+
+  const handleConfirmSave = useCallback(
+    (name: string) => {
+      const slot = createSave(name, api.state);
+      dialogs.close();
+      flashStatus(`Saved "${slot.name}" (${slot.unitCount} units).`);
+    },
+    [api.state, flashStatus],
+  );
+
+  const handleOpenLoad = useCallback(() => {
+    dialogs.open("load");
+  }, []);
+
+  const handleCancelLoad = useCallback(() => {
+    dialogs.close();
+  }, []);
+
+  const handleConfirmLoad = useCallback(
+    (name: string, raw: State) => {
+      const normalized = normalizeLoadedState(raw);
+      if (!normalized) {
+        flashStatus("Saved ORBAT could not be loaded — data may be corrupted.");
+        return;
+      }
+      api.replaceState(normalized.state);
+      setEditor({ kind: "closed" });
+      dialogs.close();
+      const n = Object.keys(normalized.state.units).length;
+      flashStatus(`Loaded "${name}" (${n} ${n === 1 ? "unit" : "units"}).`);
+    },
+    [api, flashStatus],
+  );
 
   // ---- Schema modal ----
 
@@ -1116,6 +1121,8 @@ function App() {
           onExportYaml={handleExportYaml}
           onOpenImport={handleOpenImport}
           onOpenImportYaml={handleOpenImportYaml}
+          onOpenSave={handleOpenSave}
+          onOpenLoad={handleOpenLoad}
           onOpenSchemaModal={handleOpenSchemaModal}
           onOpenShare={handleOpenShare}
           status={status}
@@ -1268,6 +1275,18 @@ function App() {
           currentStateIsEmpty={currentStateIsEmpty}
           onCancel={handleCancelImportYaml}
           onImport={handleConfirmImportYaml}
+        />
+        <SaveDialog
+          open={dialogs.active === "save"}
+          onCancel={handleCancelSave}
+          onSave={handleConfirmSave}
+        />
+        <LoadDialog
+          open={dialogs.active === "load"}
+          currentStateIsEmpty={currentStateIsEmpty}
+          onCancel={handleCancelLoad}
+          onLoad={handleConfirmLoad}
+          onStatus={flashStatus}
         />
         <SchemaModal
           open={dialogs.active === "schema"}

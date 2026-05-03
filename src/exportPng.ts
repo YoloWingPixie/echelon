@@ -78,15 +78,18 @@ export async function exportOrbatPng(
   }
 }
 
-// Filename: orbat-YYYY-MM-DD-HHmm.png (local time, no seconds).
-export function defaultExportFilename(now: Date = new Date()): string {
+export function defaultExportBasename(now: Date = new Date()): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
   const y = now.getFullYear();
   const m = pad(now.getMonth() + 1);
   const d = pad(now.getDate());
   const hh = pad(now.getHours());
   const mm = pad(now.getMinutes());
-  return `orbat-${y}-${m}-${d}-${hh}${mm}.png`;
+  return `orbat-${y}-${m}-${d}-${hh}${mm}`;
+}
+
+export function defaultExportFilename(now: Date = new Date()): string {
+  return `${defaultExportBasename(now)}.png`;
 }
 
 // Small helper — the App wires this up after getting the blob.

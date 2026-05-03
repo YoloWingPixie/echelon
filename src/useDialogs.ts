@@ -4,6 +4,8 @@ export type DialogId =
   | "export"
   | "import"
   | "importYaml"
+  | "save"
+  | "load"
   | "schema"
   | "share"
   | "stats"
