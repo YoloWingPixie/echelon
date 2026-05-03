@@ -4,10 +4,12 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { isValidLocation } from "../coords";
 import { escapeHtml } from "../format";
+import { geocodeLocation } from "../geocode";
+import { fullSlug } from "../slug";
 import { renderSymbolSVG } from "../symbol";
 import type { OrbatApi } from "../useOrbatState";
 import type { ResolvedTheme } from "../theme";
-import type { Unit } from "../types";
+import type { State, Unit } from "../types";
 import { PanelToggle } from "./PanelToggle";
 
 interface Props {
@@ -103,6 +105,140 @@ function FitToUnits({ units }: { units: Unit[] }) {
   return null;
 }
 
+const SEARCH_ZOOM = 12;
+
+type SearchStatus =
+  | { kind: "idle" }
+  | { kind: "searching" }
+  | { kind: "not-found" }
+  | { kind: "unit-no-coords"; name: string };
+
+const MIN_UNIT_SCORE = 30;
+
+function findBestUnit(state: State, q: string): Unit | null {
+  let best: Unit | null = null;
+  let bestScore = 0;
+  for (const id in state.units) {
+    const u = state.units[id];
+    const name = u.name.toLowerCase();
+    const short = u.short.toLowerCase();
+    const slug = fullSlug(state, id).toLowerCase();
+
+    let score = 0;
+    if (name === q) score += 100;
+    if (short === q) score += 90;
+    if (slug === q) score += 85;
+    if (name.startsWith(q)) score += 40;
+    if (short.startsWith(q)) score += 35;
+    if (slug.startsWith(q)) score += 30;
+    if (name.includes(q)) score += 12;
+    if (short.includes(q)) score += 10;
+    if (slug.includes(q)) score += 8;
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = u;
+    }
+  }
+  return bestScore >= MIN_UNIT_SCORE ? best : null;
+}
+
+function MapLocationSearch({ state }: { state: State }) {
+  const map = useMap();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<SearchStatus>({ kind: "idle" });
+  const abortRef = useRef<AbortController | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
+
+  const handleSearch = useCallback(async () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const q = trimmed.toLowerCase();
+
+    const unit = findBestUnit(state, q);
+    if (unit) {
+      if (isValidLocation(unit.coordinates)) {
+        map.setView([unit.coordinates!.lat, unit.coordinates!.lon], SEARCH_ZOOM);
+        setStatus({ kind: "idle" });
+      } else {
+        setStatus({ kind: "unit-no-coords", name: unit.name });
+      }
+      return;
+    }
+
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+
+    setStatus({ kind: "searching" });
+    const result = await geocodeLocation(trimmed, ac.signal);
+    if (ac.signal.aborted) return;
+
+    if (result) {
+      map.setView([result.lat, result.lon], SEARCH_ZOOM);
+      setStatus({ kind: "idle" });
+    } else {
+      setStatus({ kind: "not-found" });
+    }
+  }, [query, map, state]);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
+  const errorMsg =
+    status.kind === "not-found"
+      ? "Location not found"
+      : status.kind === "unit-no-coords"
+        ? `"${status.name}" has no coordinates`
+        : null;
+
+  return (
+    <div className="map-search" ref={containerRef}>
+      <input
+        className="field__input map-search__input"
+        type="text"
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (status.kind !== "idle" && status.kind !== "searching")
+            setStatus({ kind: "idle" });
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            void handleSearch();
+          }
+        }}
+        onFocus={() => map.keyboard?.disable()}
+        onBlur={() => map.keyboard?.enable()}
+        placeholder="Search unit or location…"
+        spellCheck={false}
+        aria-label="Search for a unit or location"
+      />
+      <button
+        type="button"
+        className="map-search__btn"
+        onClick={() => void handleSearch()}
+        disabled={status.kind === "searching" || !query.trim()}
+        aria-label="Go to location"
+      >
+        {status.kind === "searching" ? "…" : "Go"}
+      </button>
+      {errorMsg ? (
+        <div className="map-search__error">{errorMsg}</div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function MapView({ api, theme, onOpenEditor }: Props) {
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const handleToggleSide = useCallback(() => setSideCollapsed((c) => !c), []);
@@ -137,6 +273,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
           <TileLayer key={theme} url={tileUrl} attribution={tileAttr} />
           <MapSizeFix sideCollapsed={sideCollapsed} />
           <FitToUnits units={placed} />
+          <MapLocationSearch state={api.state} />
           {placed.map((u) => (
             <Marker
               key={u.id}

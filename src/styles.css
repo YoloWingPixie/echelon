@@ -741,6 +741,54 @@ button {
   z-index: 1000;
 }
 
+.map-search {
+  position: absolute;
+  top: 12px;
+  left: 56px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-search__input {
+  width: 220px;
+  font-size: 13px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.map-search__btn {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.map-search__btn:hover {
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+}
+
+.map-search__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.map-search__error {
+  font-size: 12px;
+  color: var(--danger);
+  background: var(--surface);
+  padding: 3px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
 .map-lock--active {
   background: var(--info-soft);
   color: var(--info);
