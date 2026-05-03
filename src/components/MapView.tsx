@@ -233,7 +233,7 @@ function MapLocationSearch({ state }: { state: State }) {
         {status.kind === "searching" ? "…" : "Go"}
       </button>
       {errorMsg ? (
-        <div className="map-search__error">{errorMsg}</div>
+        <div className="map-pill map-search__error">{errorMsg}</div>
       ) : null}
     </div>
   );
@@ -244,6 +244,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
   const handleToggleSide = useCallback(() => setSideCollapsed((c) => !c), []);
   const [locked, setLocked] = useState(true);
   const handleToggleLock = useCallback(() => setLocked((l) => !l), []);
+  const [filterSetId, setFilterSetId] = useState<string | null>(null);
   const { placed, unplaced } = useMemo(() => {
     const placedArr: Unit[] = [];
     const unplacedArr: Unit[] = [];
@@ -253,6 +254,35 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
     }
     return { placed: placedArr, unplaced: unplacedArr };
   }, [api.state.units]);
+
+  const inUseSets = useMemo(() => {
+    const setIds = new Set<string>();
+    for (const u of placed) {
+      for (const row of u.equipment) {
+        if (row.kind === "set" && row.refId) setIds.add(row.refId);
+      }
+    }
+    const entries: { id: string; name: string }[] = [];
+    for (const id of setIds) {
+      const s = api.state.equipmentSets[id];
+      if (s) entries.push({ id: s.id, name: s.name });
+    }
+    return entries.sort((a, b) => a.name.localeCompare(b.name));
+  }, [placed, api.state.equipmentSets]);
+
+  // React-approved "setState during render" — avoids a flash of zero markers
+  // that useEffect would cause. Self-terminating: null fails the guard.
+  if (filterSetId && !inUseSets.some((s) => s.id === filterSetId)) {
+    setFilterSetId(null);
+  }
+
+  const visiblePlaced = useMemo(() => {
+    if (!filterSetId) return placed;
+    return placed.filter((u) =>
+      u.equipment.some((r) => r.kind === "set" && r.refId === filterSetId),
+    );
+  }, [placed, filterSetId]);
+
   const schemaId = api.state.schemaId;
 
   const tileUrl = theme === "dark" ? DARK_TILES : LIGHT_TILES;
@@ -274,7 +304,7 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
           <MapSizeFix sideCollapsed={sideCollapsed} />
           <FitToUnits units={placed} />
           <MapLocationSearch state={api.state} />
-          {placed.map((u) => (
+          {visiblePlaced.map((u) => (
             <Marker
               key={u.id}
               position={[u.coordinates!.lat, u.coordinates!.lon]}
@@ -306,6 +336,30 @@ export default function MapView({ api, theme, onOpenEditor }: Props) {
             <path d={locked ? "M7 11V7a5 5 0 0 1 10 0v4" : "M7 11V7a5 5 0 0 1 9.9-1"} />
           </svg>
         </button>
+        {inUseSets.length > 0 ? (
+          <div className="map-filter">
+            <select
+              className="field__input map-filter__select"
+              value={filterSetId ?? ""}
+              onChange={(e) =>
+                setFilterSetId(e.target.value || null)
+              }
+              aria-label="Filter by equipment set"
+            >
+              <option value="">All units ({placed.length})</option>
+              {inUseSets.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {filterSetId ? (
+              <span className="map-pill map-filter__count">
+                {visiblePlaced.length} / {placed.length}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <PanelToggle
           side="right"
           collapsed={sideCollapsed}
