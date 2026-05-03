@@ -196,6 +196,10 @@ export interface Unit {
   // Optional NATO / US DoD readiness rating (C-rating). C1 = fully ready,
   // C4 = not ready. Absent = unrated; card and stats skip the indicator.
   readiness?: CRating;
+  // When true, the echelon slug suffix is omitted from this unit's slug
+  // segment. Propagates to all descendants since their parent chain includes
+  // this unit's segment.
+  hideEchelonSlug?: boolean;
 }
 
 export interface State {

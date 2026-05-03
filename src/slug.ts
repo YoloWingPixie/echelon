@@ -16,7 +16,9 @@ export function sanitizeShort(short: string): string {
 }
 
 export function unitSegment(unit: Unit, schemaId: string): string {
-  const echelonSlug = getEchelonSlug(schemaId, unit.echelon);
+  const echelonSlug = unit.hideEchelonSlug
+    ? ""
+    : getEchelonSlug(schemaId, unit.echelon);
   const designator = sanitizeShort(unit.short ?? "");
   if (!designator && !echelonSlug) return "";
   return `${designator}${echelonSlug}`;

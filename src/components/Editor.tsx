@@ -90,6 +90,7 @@ interface FormState {
   // normalizes it back to CRating | undefined on save.
   readiness: "" | CRating;
   prefix: string;
+  hideEchelonSlug: boolean;
 }
 
 function blankForm(defaultEchelon: Echelon): FormState {
@@ -108,6 +109,7 @@ function blankForm(defaultEchelon: Echelon): FormState {
     personnelOverrideText: "",
     readiness: "",
     prefix: "",
+    hideEchelonSlug: false,
   };
 }
 
@@ -138,6 +140,7 @@ function formFromUnit(u: Unit): FormState {
         : "",
     readiness: u.readiness ?? "",
     prefix: u.prefix ?? "",
+    hideEchelonSlug: u.hideEchelonSlug ?? false,
   };
 }
 
@@ -162,6 +165,7 @@ function formToFields(f: FormState): UnitFields {
     // drops the key entirely rather than storing "".
     readiness: f.readiness === "" ? undefined : f.readiness,
     prefix: normalizeOptionalString(f.prefix),
+    hideEchelonSlug: f.hideEchelonSlug || undefined,
   };
 }
 
@@ -250,7 +254,6 @@ function EditorBody({
   // just the unit's own segment alone.
   const previewSegment = unitSegment(
     {
-      // Just enough of a Unit to hand to unitSegment.
       id: "__preview__",
       name: "",
       short: form.short,
@@ -259,6 +262,7 @@ function EditorBody({
       image: "",
       equipment: [],
       parentId: UNASSIGNED,
+      hideEchelonSlug: form.hideEchelonSlug,
     },
     schemaId,
   );
@@ -281,6 +285,7 @@ function EditorBody({
             short: form.short,
             echelon: form.echelon,
             prefix: normalizeOptionalString(form.prefix),
+            hideEchelonSlug: form.hideEchelonSlug || undefined,
           },
         },
       };
@@ -740,6 +745,16 @@ function EditorBody({
             />
           </label>
         ) : null}
+        <label className="field field--wide editor__checkbox-field">
+          <input
+            type="checkbox"
+            checked={form.hideEchelonSlug}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, hideEchelonSlug: e.target.checked }))
+            }
+          />
+          <span className="field__label">Hide echelon in slug</span>
+        </label>
         <div className="field field--wide">
           <div className="editor__equipment-header">
             <span className="field__label">NATO symbol</span>

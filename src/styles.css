@@ -1491,6 +1491,16 @@ button {
   line-height: 1.4;
 }
 
+.editor__checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor__checkbox-field input[type="checkbox"] {
+  margin: 0;
+}
+
 .editor__slug-preview {
   margin-top: 10px;
   padding: 6px 10px;

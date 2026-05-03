@@ -212,6 +212,7 @@ function buildExportUnit(
   if (u.location && u.location.trim().length > 0) out.location = u.location;
   if (u.notes && u.notes.length > 0) out.notes = u.notes;
   if (u.readiness) out.readiness = u.readiness;
+  if (u.hideEchelonSlug) out.hideEchelonSlug = true;
   if (typeof u.personnelOverride === "number") {
     out.personnelOverride = u.personnelOverride;
   }
@@ -317,6 +318,7 @@ interface YamlUnit {
   readiness?: unknown;
   personnelOverride?: unknown;
   collapsed?: unknown;
+  hideEchelonSlug?: unknown;
   symbol?: unknown;
   equipment?: unknown;
 }
@@ -761,6 +763,7 @@ export function fromYaml(text: string): FromYamlResult {
         : undefined;
 
     const collapsed = raw.collapsed === true;
+    const hideEchelonSlug = raw.hideEchelonSlug === true;
 
     const unitPrefix =
       typeof raw.prefix === "string" && raw.prefix.trim().length > 0
@@ -800,6 +803,7 @@ export function fromYaml(text: string): FromYamlResult {
       ...(readiness ? { readiness } : {}),
       ...(typeof personnelOverride === "number" ? { personnelOverride } : {}),
       ...(collapsed ? { collapsed } : {}),
+      ...(hideEchelonSlug ? { hideEchelonSlug } : {}),
       ...(symbol ? { symbol } : {}),
       ...(unitPrefix ? { prefix: unitPrefix } : {}),
     };
