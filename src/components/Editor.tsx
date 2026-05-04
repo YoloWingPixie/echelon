@@ -6,6 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { copyWithFlash } from "../clipboard";
 import { getEchelonPersonnelDefault, getSchema, SCHEMAS } from "../schemas";
 import { subtreePersonnel } from "../personnel";
 import { unitSegment, fullSlug, resolveSchemaId } from "../slug";
@@ -57,6 +58,7 @@ interface Props {
   onSaveNew: (fields: UnitFields) => void;
   onSaveEdit: (id: string, fields: UnitFields) => void;
   onDelete: (id: string) => void;
+  onStatus?: (msg: string) => void;
 }
 
 interface FormState {
@@ -217,6 +219,7 @@ function EditorBody({
   onSaveNew,
   onSaveEdit,
   onDelete,
+  onStatus,
 }: Props) {
   const { units } = state;
   const baseSchemaId =
@@ -850,7 +853,16 @@ function EditorBody({
       </div>
       <div className="editor__slug-preview">
         <span className="editor__slug-label">Slug:</span>{" "}
-        <code className="editor__slug-value">{previewSlug || "(empty)"}</code>
+        <code
+          className="editor__slug-value"
+          title="Click to copy"
+          onClick={(e) => {
+            if (!previewSlug) return;
+            copyWithFlash(previewSlug, e.currentTarget, "editor__slug-value--copied", onStatus, "Slug copied to clipboard.");
+          }}
+        >
+          {previewSlug || "(empty)"}
+        </code>
       </div>
       {error ? <div className="editor__error">{error}</div> : null}
       <footer className="editor__footer">

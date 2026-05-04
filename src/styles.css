@@ -1219,9 +1219,18 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  user-select: text;
-  -webkit-user-select: text;
-  cursor: text;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.unit-card__slug:hover {
+  background: var(--info-soft);
+  border-color: var(--info);
+}
+
+.unit-card__slug--copied {
+  background: var(--ok-soft, var(--info-soft));
+  border-color: var(--ok, var(--info));
 }
 
 /* Echelon label — small tracked caps, no background. */
@@ -1349,8 +1358,10 @@ button {
   cursor: pointer;
 }
 
-/* Coord line sits beneath the name (or alone when no name). Monospace +
-   muted so it reads as a technical complement, not a competing title. */
+.unit-card__named-location:hover {
+  color: var(--info);
+}
+
 .unit-card__location-coords {
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 10.5px;
@@ -1361,6 +1372,10 @@ button {
   text-overflow: ellipsis;
   min-width: 0;
   cursor: pointer;
+}
+
+.unit-card__location-coords:hover {
+  color: var(--info);
 }
 
 /* ----- Root drop zone ----- */
@@ -1514,6 +1529,18 @@ button {
   font-weight: 600;
   color: var(--text);
   word-break: break-all;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.editor__slug-value:hover {
+  background: var(--info-soft);
+}
+
+.editor__slug-value--copied {
+  background: var(--ok-soft, var(--info-soft));
 }
 
 .editor__error {

@@ -17,3 +17,18 @@ export async function tryCopyToClipboard(text: string): Promise<boolean> {
   }
   return false;
 }
+
+export function copyWithFlash(
+  text: string,
+  el: HTMLElement,
+  copiedClass: string,
+  onStatus?: (msg: string) => void,
+  statusMsg = "Copied to clipboard.",
+): void {
+  void tryCopyToClipboard(text).then((ok) => {
+    if (!ok) return;
+    el.classList.add(copiedClass);
+    setTimeout(() => el.classList.remove(copiedClass), 600);
+    onStatus?.(statusMsg);
+  });
+}

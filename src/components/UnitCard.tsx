@@ -17,6 +17,7 @@ import {
   readinessLabel,
   strengthBand,
 } from "../strength";
+import { copyWithFlash } from "../clipboard";
 import type { Unit } from "../types";
 
 interface Props {
@@ -56,6 +57,7 @@ interface Props {
   // unit.coordinates is rendered in the card's footer. Optional so callers
   // in tests can omit it (coordinates line simply won't render).
   coordFormat?: CoordFormat;
+  onStatus?: (msg: string) => void;
 }
 
 // Symbol slot is a consistent 44px square regardless of source (NATO SVG,
@@ -86,6 +88,7 @@ function UnitCardInner({
   descendantCount = 0,
   onToggleCollapsed,
   coordFormat,
+  onStatus,
 }: Props) {
   const { draggingId, setDraggingId } = useDnd();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -179,6 +182,15 @@ function UnitCardInner({
       suppressDragUntilPointerUp();
     },
     [suppressDragUntilPointerUp],
+  );
+
+  const onSlugClick = useCallback(
+    (e: MouseEvent<HTMLSpanElement>) => {
+      e.stopPropagation();
+      if (!fullSlug) return;
+      copyWithFlash(fullSlug, e.currentTarget, "unit-card__slug--copied", onStatus, "Slug copied to clipboard.");
+    },
+    [fullSlug, onStatus],
   );
 
   const draggingSelf = draggingId === unit.id;
@@ -330,9 +342,6 @@ function UnitCardInner({
       ? formatLocation(unit.coordinates, coordFormat)
       : "";
 
-  // Double-click on either location line opens OpenStreetMap. Prefer the
-  // exact coordinates when set (pin + zoom); fall back to a named-place
-  // search when only the free-text location is present.
   const openInOsm = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
@@ -429,8 +438,9 @@ function UnitCardInner({
               {fullSlug ? (
                 <span
                   className="unit-card__slug"
-                  title={fullSlug}
+                  title="Click to copy slug"
                   onMouseDown={onSlugMouseDown}
+                  onClick={onSlugClick}
                   onDoubleClick={(e) => e.stopPropagation()}
                 >
                   {fullSlug}
@@ -494,7 +504,7 @@ function UnitCardInner({
             {namedLocation ? (
               <div
                 className="unit-card__named-location"
-                title={`${namedLocation} — double-click to open in OpenStreetMap`}
+                title="Double-click to open in OpenStreetMap"
                 onDoubleClick={openInOsm}
               >
                 {namedLocation}
@@ -503,7 +513,7 @@ function UnitCardInner({
             {coordText ? (
               <div
                 className="unit-card__location-coords"
-                title={`${coordText} — double-click to open in OpenStreetMap`}
+                title="Double-click to open in OpenStreetMap"
                 onDoubleClick={openInOsm}
               >
                 {coordText}

@@ -102,6 +102,9 @@ export function overwriteSave(id: string, state: State): SaveMeta | null {
   const index = readIndex();
   const meta = index[id];
   if (!meta) return null;
+  const prevSavedAt = meta.savedAt;
+  const prevUnitCount = meta.unitCount;
+  const prevRootCount = meta.rootCount;
   meta.savedAt = Date.now();
   meta.unitCount = Object.keys(state.units).length;
   meta.rootCount = state.rootIds.length;
@@ -109,7 +112,11 @@ export function overwriteSave(id: string, state: State): SaveMeta | null {
   try {
     localStorage.setItem(SLOT_PREFIX + id, JSON.stringify(state));
   } catch {
-    // Storage full — revert metadata changes.
+    meta.savedAt = prevSavedAt;
+    meta.unitCount = prevUnitCount;
+    meta.rootCount = prevRootCount;
+    writeIndex(index);
+    return null;
   }
   return meta;
 }

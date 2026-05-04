@@ -4,9 +4,9 @@
 import { forward as mgrsForward, toPoint as mgrsToPoint } from "mgrs";
 import type { UnitCoordinates } from "./types";
 
-export type CoordFormat = "decimal" | "mgrs" | "dms";
+export type CoordFormat = "decimal" | "mgrs" | "dms" | "dm";
 
-export const COORD_FORMATS: CoordFormat[] = ["decimal", "mgrs", "dms"];
+export const COORD_FORMATS: CoordFormat[] = ["decimal", "mgrs", "dms", "dm"];
 
 export function nextCoordFormat(f: CoordFormat): CoordFormat {
   const i = COORD_FORMATS.indexOf(f);
@@ -22,6 +22,8 @@ export function coordFormatLabel(f: CoordFormat): string {
       return "MGRS";
     case "dms":
       return "DMS";
+    case "dm":
+      return "DDM";
   }
 }
 
@@ -105,6 +107,29 @@ function dmsComponent(value: number, axis: "lat" | "lon"): string {
   return `${degStr}\u00B0${minStr}'${secStr}" ${hemi}`;
 }
 
+export function formatDm(loc: UnitCoordinates): string {
+  if (!isValidLocation(loc)) return "";
+  return `${dmComponent(loc.lat, "lat")} ${dmComponent(loc.lon, "lon")}`;
+}
+
+function dmComponent(value: number, axis: "lat" | "lon"): string {
+  const hemi =
+    axis === "lat"
+      ? value >= 0 ? "N" : "S"
+      : value >= 0 ? "E" : "W";
+  const abs = Math.abs(value);
+  let deg = Math.floor(abs);
+  let min = (abs - deg) * 60;
+  if (min >= 59.99995) {
+    min = 0;
+    deg += 1;
+  }
+  const degWidth = axis === "lat" ? 2 : 3;
+  const degStr = String(deg).padStart(degWidth, "0");
+  const minStr = min.toFixed(4).padStart(7, "0");
+  return `${degStr}°${minStr}' ${hemi}`;
+}
+
 export function formatLocation(loc: UnitCoordinates, f: CoordFormat): string {
   switch (f) {
     case "decimal":
@@ -113,6 +138,8 @@ export function formatLocation(loc: UnitCoordinates, f: CoordFormat): string {
       return formatMgrs(loc);
     case "dms":
       return formatDms(loc);
+    case "dm":
+      return formatDm(loc);
   }
 }
 

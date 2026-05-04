@@ -24,6 +24,7 @@ interface Props {
   onHoverLeave?: (unitId: string) => void;
   coordFormat?: CoordFormat;
   layoutPref: LayoutPref;
+  onStatus?: (msg: string) => void;
 }
 
 export function TreeCanvas({
@@ -36,6 +37,7 @@ export function TreeCanvas({
   onHoverLeave,
   coordFormat,
   layoutPref,
+  onStatus,
 }: Props) {
   const { state } = api;
   const apiRef = useRef(api);
@@ -163,6 +165,7 @@ export function TreeCanvas({
           onHoverEnter={onHoverEnter}
           onHoverLeave={onHoverLeave}
           coordFormat={coordFormat}
+          onStatus={onStatus}
         />
       ))}
     </div>
@@ -181,6 +184,7 @@ interface PositionedCardProps {
   onHoverEnter?: (unitId: string) => void;
   onHoverLeave?: (unitId: string) => void;
   coordFormat?: CoordFormat;
+  onStatus?: (msg: string) => void;
 }
 
 function PositionedCard({
@@ -195,6 +199,7 @@ function PositionedCard({
   onHoverEnter,
   onHoverLeave,
   coordFormat,
+  onStatus,
 }: PositionedCardProps) {
   const unit = api.state.units[node.id];
   if (!unit) return null;
@@ -228,6 +233,7 @@ function PositionedCard({
         descendantCount={descCount}
         onToggleCollapsed={api.toggleCollapsed}
         coordFormat={coordFormat}
+        onStatus={onStatus}
       />
     </div>
   );

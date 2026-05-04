@@ -497,7 +497,7 @@ export function TopBar({
             type="button"
             className="btn btn--ghost chip chip--coord"
             onClick={onCycleCoordFormat}
-            title="Cycle coordinate format: Decimal \u2192 MGRS \u2192 DMS"
+            title="Cycle coordinate format: Decimal \u2192 MGRS \u2192 DMS \u2192 DDM"
             aria-label={`Coordinate format: ${coordFormatLabel(coordFormat)}. Click to cycle.`}
           >
             <span className="chip__key">Coords</span>

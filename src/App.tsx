@@ -1316,6 +1316,7 @@ function App() {
                     onHoverLeave={handleHoverLeave}
                     coordFormat={coordFormat}
                     layoutPref={layoutPref}
+                    onStatus={flashStatus}
                   />
                   <RootDropZone onDropAtRoot={handleDropAtRoot} />
                 </div>
@@ -1362,6 +1363,7 @@ function App() {
           onSaveNew={handleSaveNew}
           onSaveEdit={handleSaveEdit}
           onDelete={handleDelete}
+          onStatus={flashStatus}
         />
         <EquipmentEditor
           mode={equipEditor}
