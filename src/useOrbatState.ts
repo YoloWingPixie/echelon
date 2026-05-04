@@ -14,6 +14,7 @@ import {
   moveTo as _moveTo,
   moveToUnassigned as _moveToUnassigned,
   pasteSubtree as _pasteSubtree,
+  injectUnits as _injectUnits,
   removeSubtree as _removeSubtree,
   setPrefix as _setPrefix,
   setSchema as _setSchema,
@@ -29,6 +30,7 @@ import type {
   Equipment,
   EquipmentSet,
   State,
+  Unit,
   Unassigned,
   UnitFields,
 } from "./types";
@@ -74,6 +76,7 @@ export interface OrbatApi {
   cutSubtree: (sourceId: string) => void;
   pasteSubtreeAt: (parentId: string | null | Unassigned) => string | null;
   duplicateUnit: (sourceId: string) => string | null;
+  injectUnits: (units: Record<string, Unit>) => number;
   // Viewport-only collapse state. Intentionally NOT routed through the
   // history stack — collapse is view state, not data state. Undoing a
   // drag-drop should not re-expand a branch the user collapsed earlier.
@@ -374,6 +377,19 @@ export function useOrbatState(): OrbatApi {
     [applyMutation],
   );
 
+  const injectUnits = useCallback(
+    (units: Record<string, Unit>): number => {
+      let count = 0;
+      applyMutation((prev) => {
+        const result = _injectUnits(prev, units);
+        count = result.count;
+        return result.state;
+      });
+      return count;
+    },
+    [applyMutation],
+  );
+
   // ---- Collapse (viewport state, bypasses history) ----
   //
   // These setters deliberately do NOT go through applyMutation: collapse is
@@ -456,6 +472,7 @@ export function useOrbatState(): OrbatApi {
       cutSubtree,
       pasteSubtreeAt,
       duplicateUnit,
+      injectUnits,
       toggleCollapsed,
       setAllCollapsed,
     }),
@@ -489,6 +506,7 @@ export function useOrbatState(): OrbatApi {
       cutSubtree,
       pasteSubtreeAt,
       duplicateUnit,
+      injectUnits,
       toggleCollapsed,
       setAllCollapsed,
     ],

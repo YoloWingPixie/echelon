@@ -22,7 +22,6 @@ interface Props {
   onOpenLoad: () => void;
   onOpenSchemaModal: () => void;
   onOpenShare: () => void;
-  status: string | null;
   schemaId: string;
   onSchemaChange: (schemaId: string) => void;
   prefix: string;
@@ -70,7 +69,6 @@ export function TopBar({
   onOpenLoad,
   onOpenSchemaModal,
   onOpenShare,
-  status,
   schemaId,
   onSchemaChange,
   prefix,
@@ -506,18 +504,6 @@ export function TopBar({
             <span className="chip__val">{coordFormatLabel(coordFormat)}</span>
           </button>
         </div>
-      </div>
-
-      {/* Thin status sub-row — collapses to zero height when empty. */}
-      <div
-        className={
-          status
-            ? "topbar__status-row topbar__status-row--visible"
-            : "topbar__status-row"
-        }
-        aria-live="polite"
-      >
-        <div className="topbar__status">{status ?? ""}</div>
       </div>
     </header>
   );

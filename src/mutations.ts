@@ -762,6 +762,9 @@ export function pasteSubtree(
         : {}),
       ...(src.readiness ? { readiness: src.readiness } : {}),
       ...(src.prefix ? { prefix: src.prefix } : {}),
+      ...(src.schemaOverride ? { schemaOverride: src.schemaOverride } : {}),
+      ...(src.hidePrefix ? { hidePrefix: src.hidePrefix } : {}),
+      ...(src.hideEchelonSlug ? { hideEchelonSlug: src.hideEchelonSlug } : {}),
     };
     next.units[newId] = copy;
   }
@@ -786,4 +789,95 @@ export function duplicateSubtree(
   const clip = captureSubtree(state, sourceId);
   if (!clip) return { state, newRootId: "" };
   return pasteSubtree(state, clip, src.parentId);
+}
+
+export function injectUnits(
+  state: State,
+  incoming: Record<string, Unit>,
+): { state: State; count: number } {
+  const oldIds = Object.keys(incoming);
+  if (oldIds.length === 0) return { state, count: 0 };
+
+  const idMap = new Map<string, string>();
+  for (const oldId of oldIds) {
+    idMap.set(oldId, newUnitId());
+  }
+
+  const next = cloneState(state);
+  const newRootIds: string[] = [];
+
+  for (const oldId of oldIds) {
+    const src = incoming[oldId];
+    const newId = idMap.get(oldId)!;
+
+    // Resolve parentId: remap if it's another pasted unit, check if it
+    // exists in current state, otherwise treat as a new root.
+    let parentId: string | null | Unassigned;
+    if (
+      typeof src.parentId === "string" &&
+      src.parentId !== UNASSIGNED &&
+      idMap.has(src.parentId)
+    ) {
+      parentId = idMap.get(src.parentId)!;
+    } else if (
+      typeof src.parentId === "string" &&
+      src.parentId !== UNASSIGNED &&
+      next.units[src.parentId]
+    ) {
+      parentId = src.parentId;
+    } else if (src.parentId === UNASSIGNED) {
+      parentId = UNASSIGNED;
+    } else {
+      parentId = null;
+    }
+
+    const equipment: UnitEquipment[] = Array.isArray(src.equipment)
+      ? src.equipment.map((e) => ({
+          ...cloneEquipmentRow(e),
+          id: newEquipmentRowId(),
+        }))
+      : [];
+
+    const symbol: UnitSymbol | undefined = src.symbol
+      ? { ...src.symbol, modifiers: { ...src.symbol.modifiers } }
+      : undefined;
+
+    const copy: Unit = {
+      id: newId,
+      name: src.name ?? "",
+      short: src.short ?? "",
+      echelon: src.echelon ?? "",
+      color: src.color ?? "c-gray",
+      image: src.image ?? "",
+      equipment,
+      parentId,
+      ...(symbol ? { symbol } : {}),
+      ...(src.coordinates
+        ? { coordinates: { lat: src.coordinates.lat, lon: src.coordinates.lon } }
+        : {}),
+      ...(src.location ? { location: src.location } : {}),
+      ...(src.notes ? { notes: src.notes } : {}),
+      ...(typeof src.personnelOverride === "number"
+        ? { personnelOverride: src.personnelOverride }
+        : {}),
+      ...(src.readiness ? { readiness: src.readiness } : {}),
+      ...(src.prefix ? { prefix: src.prefix } : {}),
+      ...(src.schemaOverride ? { schemaOverride: src.schemaOverride } : {}),
+      ...(src.hidePrefix ? { hidePrefix: src.hidePrefix } : {}),
+      ...(src.hideEchelonSlug ? { hideEchelonSlug: src.hideEchelonSlug } : {}),
+    };
+    next.units[newId] = copy;
+
+    if (parentId === null) {
+      newRootIds.push(newId);
+    } else if (parentId === UNASSIGNED) {
+      next.unassigned = [...next.unassigned, newId];
+    }
+  }
+
+  if (newRootIds.length > 0) {
+    next.rootIds = [...next.rootIds, ...newRootIds];
+  }
+
+  return { state: next, count: oldIds.length };
 }

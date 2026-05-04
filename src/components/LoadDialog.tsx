@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { formatDate } from "../format";
 import {
   listSaves,
   loadSaveState,
@@ -14,19 +15,13 @@ interface Props {
   open: boolean;
   currentStateIsEmpty: boolean;
   onCancel: () => void;
-  onLoad: (name: string, state: State) => void;
+  onLoad: (id: string, name: string, state: State) => void;
   onStatus: (msg: string) => void;
 }
 
 export function LoadDialog(props: Props) {
   if (!props.open) return null;
   return <LoadDialogBody {...props} />;
-}
-
-function formatDate(ts: number): string {
-  const d = new Date(ts);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function LoadDialogBody({ currentStateIsEmpty, onCancel, onLoad, onStatus }: Props) {
@@ -43,7 +38,7 @@ function LoadDialogBody({ currentStateIsEmpty, onCancel, onLoad, onStatus }: Pro
         onStatus(`Failed to load "${meta.name}" — save data may be corrupted.`);
         return;
       }
-      onLoad(meta.name, state);
+      onLoad(meta.id, meta.name, state);
     },
     [onLoad, onStatus],
   );

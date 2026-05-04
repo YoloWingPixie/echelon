@@ -42,8 +42,24 @@ export function loadSaveState(id: string): State | null {
   if (typeof localStorage === "undefined") return null;
   try {
     const raw = localStorage.getItem(SLOT_PREFIX + id);
-    if (!raw) return null;
-    return JSON.parse(raw) as State;
+    if (raw) return JSON.parse(raw) as State;
+    // Fall back to pre-split format where the full state was embedded in the
+    // index entry itself (before the index/slot split).
+    const indexRaw = localStorage.getItem(INDEX_KEY);
+    if (!indexRaw) return null;
+    const index = JSON.parse(indexRaw) as Record<string, unknown>;
+    const entry = index[id] as Record<string, unknown> | undefined;
+    if (!entry || typeof entry !== "object") return null;
+    // Old SaveSlot format: { id, name, ..., state: State }
+    if ("state" in entry && entry.state && typeof entry.state === "object") {
+      const s = entry.state as Record<string, unknown>;
+      if (s.units && s.rootIds) return entry.state as State;
+    }
+    // Entry itself might be a State (units/rootIds at top level)
+    if (entry.units && Array.isArray(entry.rootIds)) {
+      return entry as unknown as State;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -80,6 +96,22 @@ export function deleteSave(id: string): void {
   } catch {
     // ignore
   }
+}
+
+export function overwriteSave(id: string, state: State): SaveMeta | null {
+  const index = readIndex();
+  const meta = index[id];
+  if (!meta) return null;
+  meta.savedAt = Date.now();
+  meta.unitCount = Object.keys(state.units).length;
+  meta.rootCount = state.rootIds.length;
+  writeIndex(index);
+  try {
+    localStorage.setItem(SLOT_PREFIX + id, JSON.stringify(state));
+  } catch {
+    // Storage full — revert metadata changes.
+  }
+  return meta;
 }
 
 export function renameSave(id: string, name: string): void {

@@ -75,8 +75,10 @@ import {
 } from "./layout";
 import { parseShareHash, SHARE_HASH_PREFIX } from "./urlShare";
 import { tryCopyToClipboard } from "./clipboard";
-import { createSave } from "./savedOrbats";
+import { createSave, overwriteSave } from "./savedOrbats";
 import { normalizeLoadedState } from "./storage";
+import { parseClipboardText, detectCollisions, type Collision } from "./pasteUnits";
+import { PasteConfirmDialog } from "./components/PasteConfirmDialog";
 import { toYaml } from "./yamlFormat";
 import { exportSubtreeJson, exportSubtreeYaml, exportSubtreeMarkdown, exportSubtreePng, exportSubtreePngTransparent } from "./exportSubtree";
 import {
@@ -84,6 +86,7 @@ import {
   type Equipment,
   type EquipmentSet,
   type State,
+  type Unit,
   type UnitFields,
 } from "./types";
 
@@ -135,6 +138,16 @@ function App() {
   // UnitCard's onMouseEnter/Leave callbacks. A ref (not state) because we
   // only need the value inside keyboard handlers — no render should track it.
   const hoveredUnitIdRef = useRef<string | null>(null);
+
+  // The currently active save slot. Set when the user saves or loads an ORBAT.
+  // Ctrl+S quick-saves to this slot; null means "no slot, prompt for a name".
+  const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
+
+  // Pending paste: units waiting for user confirmation due to collisions.
+  const [pendingPaste, setPendingPaste] = useState<{
+    units: Record<string, Unit>;
+    collisions: Collision[];
+  } | null>(null);
   // Always-current pointer to `api`. Drop-site handlers passed to UnitCard
   // (wrapped in React.memo) must have stable references across renders so
   // memoized cards can skip re-rendering on unrelated mutations. Reading
@@ -531,11 +544,28 @@ function App() {
     dialogs.close();
   }, []);
 
-  const handleConfirmSave = useCallback(
+  const handleSaveOrbatNew = useCallback(
     (name: string) => {
       const slot = createSave(name, api.state);
+      setActiveSaveId(slot.id);
+
       dialogs.close();
       flashStatus(`Saved "${slot.name}" (${slot.unitCount} units).`);
+    },
+    [api.state, flashStatus],
+  );
+
+  const handleOverwriteSave = useCallback(
+    (id: string) => {
+      const slot = overwriteSave(id, api.state);
+      dialogs.close();
+      if (slot) {
+        setActiveSaveId(slot.id);
+  
+        flashStatus(`Overwrote "${slot.name}" (${slot.unitCount} units).`);
+      } else {
+        flashStatus("Save not found — it may have been deleted.");
+      }
     },
     [api.state, flashStatus],
   );
@@ -549,13 +579,18 @@ function App() {
   }, []);
 
   const handleConfirmLoad = useCallback(
-    (name: string, raw: State) => {
+    (id: string, name: string, raw: State) => {
+      if (!raw || typeof raw !== "object") {
+        flashStatus(`Could not load "${name}" — save data is missing.`);
+        return;
+      }
       const normalized = normalizeLoadedState(raw);
       if (!normalized) {
-        flashStatus("Saved ORBAT could not be loaded — data may be corrupted.");
+        flashStatus(`Could not load "${name}" — missing units, rootIds, or unassigned.`);
         return;
       }
       api.replaceState(normalized.state);
+      setActiveSaveId(id);
       setEditor({ kind: "closed" });
       dialogs.close();
       const n = Object.keys(normalized.state.units).length;
@@ -878,6 +913,42 @@ function App() {
     flashStatus("Redid.");
   }, [api, flashStatus]);
 
+  const handleExternalPaste = useCallback(
+    (text: string) => {
+      if (!text.trim()) return;
+      const result = parseClipboardText(text);
+      if (!result) return;
+      if (result.errors.length > 0) {
+        flashStatus(result.errors[0]);
+        return;
+      }
+      const a = apiRef.current;
+      const collisions = detectCollisions(a.state, result.units);
+      if (collisions.length > 0) {
+        setPendingPaste({ units: result.units, collisions });
+        return;
+      }
+      const count = a.injectUnits(result.units);
+      if (count > 0) {
+        flashStatus(`Pasted ${count} ${count === 1 ? "unit" : "units"}.`);
+      }
+    },
+    [flashStatus],
+  );
+
+  const handleConfirmPaste = useCallback(() => {
+    if (!pendingPaste) return;
+    const count = api.injectUnits(pendingPaste.units);
+    setPendingPaste(null);
+    if (count > 0) {
+      flashStatus(`Pasted ${count} ${count === 1 ? "unit" : "units"}.`);
+    }
+  }, [pendingPaste, api, flashStatus]);
+
+  const handleCancelPaste = useCallback(() => {
+    setPendingPaste(null);
+  }, []);
+
   // ---- Global keyboard shortcuts ----
   //
   // Undo/redo + hover-target copy/cut/duplicate/paste. All guarded so they
@@ -911,6 +982,23 @@ function App() {
       if (key === "y") {
         e.preventDefault();
         handleRedo();
+        return;
+      }
+
+      // Quick-save or open Save dialog.
+      if (key === "s") {
+        e.preventDefault();
+        if (activeSaveId) {
+          const slot = overwriteSave(activeSaveId, apiRef.current.state);
+          if (slot) {
+            flashStatus(`Saved "${slot.name}".`);
+          } else {
+            flashStatus("Save slot not found — opening Save dialog.");
+            dialogs.open("save");
+          }
+        } else {
+          dialogs.open("save");
+        }
         return;
       }
 
@@ -973,22 +1061,52 @@ function App() {
         return;
       }
       if (key === "v") {
-        if (!api.clipboard) return;
+        // Internal subtree clipboard takes priority.
+        if (api.clipboard) {
+          e.preventDefault();
+          if (hovered) {
+            handlePasteAsChild(hovered);
+          } else {
+            handlePasteAsRoot();
+          }
+          return;
+        }
+        // No internal clipboard — try the async Clipboard API to read
+        // JSON/YAML from the system clipboard. This requires a secure
+        // context and a transient user activation (which Ctrl+V provides).
         e.preventDefault();
-        if (hovered) {
-          handlePasteAsChild(hovered);
-        } else {
-          handlePasteAsRoot();
+        if (navigator.clipboard?.readText) {
+          void navigator.clipboard.readText().then(handleExternalPaste, () => {});
         }
         return;
       }
     };
+
+    // Fallback: the paste event fires on focused editable elements and on
+    // the document in some browsers. Handles cases where the async Clipboard
+    // API is unavailable or denied.
+    const onPaste = (e: ClipboardEvent) => {
+      if (isEditableTarget(e.target)) return;
+      const text = e.clipboardData?.getData("text/plain") ?? "";
+      if (!text.trim()) return;
+      if (!parseClipboardText(text)) return;
+      e.preventDefault();
+      // handleExternalPaste re-parses, but paste is a rare user action
+      // and the cost is negligible.
+      handleExternalPaste(text);
+    };
+
     window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("paste", onPaste);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("paste", onPaste);
     };
   }, [
+    activeSaveId,
     api.clipboard,
+    flashStatus,
+    handleExternalPaste,
     handleCopy,
     handleCut,
     handleDuplicate,
@@ -1111,7 +1229,13 @@ function App() {
 
   return (
     <DndProvider>
-      <div className="app">
+      <div className="app" tabIndex={-1}>
+        <div
+          className={status ? "toast toast--visible" : "toast"}
+          aria-live="polite"
+        >
+          {status ?? ""}
+        </div>
         <TopBar
           onNewUnit={handleNewUnit}
           onReset={handleReset}
@@ -1125,7 +1249,6 @@ function App() {
           onOpenLoad={handleOpenLoad}
           onOpenSchemaModal={handleOpenSchemaModal}
           onOpenShare={handleOpenShare}
-          status={status}
           schemaId={api.state.schemaId}
           onSchemaChange={handleSchemaChange}
           prefix={api.state.prefix ?? ""}
@@ -1279,7 +1402,8 @@ function App() {
         <SaveDialog
           open={dialogs.active === "save"}
           onCancel={handleCancelSave}
-          onSave={handleConfirmSave}
+          onSaveNew={handleSaveOrbatNew}
+          onOverwrite={handleOverwriteSave}
         />
         <LoadDialog
           open={dialogs.active === "load"}
@@ -1351,6 +1475,13 @@ function App() {
           onSelect={handleSelectSearchResult}
         />
         <ShortcutsDialog open={dialogs.active === "help"} onClose={() => dialogs.close()} />
+        <PasteConfirmDialog
+          open={pendingPaste !== null}
+          collisions={pendingPaste?.collisions ?? []}
+          unitCount={pendingPaste ? Object.keys(pendingPaste.units).length : 0}
+          onConfirm={handleConfirmPaste}
+          onCancel={handleCancelPaste}
+        />
       </div>
     </DndProvider>
   );
