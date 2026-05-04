@@ -36,11 +36,15 @@ export function unitSegment(unit: Unit, schemaId: string): string {
   const designator = sanitizeShort(unit.short ?? "");
   if (!designator && !echelonSlug) return "";
   if (echelonSlug && designator.length > echelonSlug.length) {
-    const atEnd = designator.endsWith(echelonSlug) &&
-      !/[a-z]/.test(designator[designator.length - echelonSlug.length - 1]);
-    const atStart = designator.startsWith(echelonSlug) &&
-      !/[a-z]/.test(designator[echelonSlug.length]);
-    if (atEnd || atStart) return designator;
+    // Suffix: always dedupe — appending would stutter (e.g. "fofmtfk" + "fmtfk").
+    if (designator.endsWith(echelonSlug)) return designator;
+    // Prefix: only dedupe at a word boundary to avoid false positives
+    // like "comms" + "co".
+    if (
+      designator.startsWith(echelonSlug) &&
+      !/[a-z]/.test(designator[echelonSlug.length])
+    )
+      return designator;
   }
   if (echelonSlug && designator === echelonSlug) return designator;
   return `${designator}${echelonSlug}`;

@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "iraqi-air-force",
   name: "Iraqi Air Force",
   description: "Echelon schema for the Iraqi Air Force (Al-Quwwa al-Jawwiya al-Iraqiya). Based on publicly available information, covering historical and modern structures.",
+  group: "Iraq",
   echelons: [
     { label: "Air Command", slug: "cmd", level: 10, personnelDefault: 100000 },
     { label: "Air Base Command", slug: "basecmd", level: 9, personnelDefault: 40000 },

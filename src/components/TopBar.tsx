@@ -224,17 +224,28 @@ export function TopBar({
 
   // ---- Schema menu ----
   const activeSchema = SCHEMAS.find((s) => s.id === schemaId);
-  const schemaItems = useMemo<MenuItem[]>(
-    () =>
-      SCHEMAS.map((s) => ({
+  const schemaItems = useMemo<MenuItem[]>(() => {
+    const items: MenuItem[] = [];
+    let lastGroup = "";
+    for (const s of SCHEMAS) {
+      const group = s.group ?? "";
+      if (group !== lastGroup) {
+        if (items.length > 0) {
+          items.push({ label: "", separator: true });
+        }
+        items.push({ label: group, groupHeader: true });
+        lastGroup = group;
+      }
+      items.push({
         id: s.id,
         label: s.name,
         sublabel: s.description,
         active: s.id === schemaId,
         onClick: () => onSchemaChange(s.id),
-      })),
-    [schemaId, onSchemaChange],
-  );
+      });
+    }
+    return items;
+  }, [schemaId, onSchemaChange]);
 
   return (
     <header className="topbar">

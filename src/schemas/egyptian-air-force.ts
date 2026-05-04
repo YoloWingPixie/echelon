@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "egyptian-air-force",
   name: "Egyptian Air Force",
   description: "Echelon schema for the Egyptian Air Force (Al-Qūwāt al-Gawwīyä al-Miṣrīyä). Based on publicly available information.",
+  group: "Egypt",
   echelons: [
     { label: "Air Force", slug: "eaf", level: 10, personnelDefault: 100000 },
     { label: "Air Fleet", slug: "flt", level: 9, personnelDefault: 40000 },

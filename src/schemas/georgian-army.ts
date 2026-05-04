@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "georgian-army",
   name: "Georgian Army",
   description: "Standard Georgian Army organizational structure",
+  group: "Georgia",
   echelons: [
     { label: "Brigade", slug: "bde", level: 7, personnelDefault: 3500 },
     { label: "Battalion", slug: "bn", level: 6, personnelDefault: 500 },

@@ -40,39 +40,56 @@ import usArmy from "./us-army";
 import usMarineCorps from "./us-marine-corps";
 import gdrLsklv from "./gdr-lsklv";
 import bundeswehrHeer from "./bundeswehr-heer";
+import bundeswehrLuftwaffe from "./bundeswehr-luftwaffe";
 import natoCommand from "./nato-command";
 import gdrLandstreitkraefte from "./gdr-landstreitkraefte";
+import gdrLuftsteitkraefte from "./gdr-luftstreitkraefte";
 import britishArmy from "./british-army";
 import iranianArmy from "./iranian-army";
 import iranianAirForce from "./iranian-air-force";
 import usNavy from "./us-navy";
 
 export const SCHEMAS: EchelonSchema[] = [
+  // International
   generic,
-  egyptianAirForce,
-  egyptianArmy,
-  georgianArmy,
-  iraqiAirForce,
-  iraqiArmy1990,
+  natoCommand,
+  pmc,
+  // China
   plaGroundForce,
   plaNavy,
-  pmc,
-  pvo1991,
+  // East Germany
+  gdrLandstreitkraefte,
+  gdrLuftsteitkraefte,
+  gdrLsklv,
+  // Egypt
+  egyptianAirForce,
+  egyptianArmy,
+  // Georgia
+  georgianArmy,
+  // Germany
+  bundeswehrHeer,
+  bundeswehrLuftwaffe,
+  // Iran
+  iranianAirForce,
+  iranianArmy,
+  // Iraq
+  iraqiAirForce,
+  iraqiArmy1990,
+  // Russia
   russianAirForce,
   russianArmy,
   russianNavy,
+  // Soviet Union
+  pvo1991,
   sovietVvs1991,
+  // Syria
   syrianArmy,
+  // United Kingdom
+  britishArmy,
+  // United States
   usAirForce,
   usArmy,
   usMarineCorps,
-  gdrLsklv,
-  bundeswehrHeer,
-  natoCommand,
-  gdrLandstreitkraefte,
-  britishArmy,
-  iranianArmy,
-  iranianAirForce,
   usNavy,
 ];
 
@@ -116,7 +133,12 @@ export function getEchelonLevel(
   if (!label) return null;
   const schema = getSchema(schemaId);
   const found = schema.echelons.find((e) => e.label === label);
-  return found ? found.level : null;
+  if (found) return found.level;
+  for (const s of SCHEMAS) {
+    const hit = s.echelons.find((e) => e.label === label);
+    if (hit) return hit.level;
+  }
+  return null;
 }
 
 // Look up the default personnel count for an echelon label within a schema.

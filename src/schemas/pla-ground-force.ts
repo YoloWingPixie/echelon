@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "pla-ground-force",
   name: "PLA Ground Force",
   description: "Standard Chinese People's Liberation Army Ground Force organizational structure",
+  group: "China",
   echelons: [
     { label: "Group Army", slug: "ga", level: 10, personnelDefault: 60000 },
     { label: "Brigade", slug: "bde", level: 7, personnelDefault: 5000 },

@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "us-marine-corps",
   name: "US Marine Corps",
   description: "Standard US Marine Corps organizational structure (MAGTF)",
+  group: "United States",
   echelons: [
     { label: "Marine Expeditionary Force", slug: "mef", level: 10, personnelDefault: 48000 },
     { label: "Marine Division", slug: "mdiv", level: 8, personnelDefault: 18000 },

@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "iranian-army",
   name: "Iranian Army (Artesh)",
   description: "Islamic Republic of Iran Army Ground Forces",
+  group: "Iran",
   echelons: [
     { label: "Regional HQ", slug: "rhq", level: 9, personnelDefault: 50000 },
     { label: "Division", slug: "div", level: 8, personnelDefault: 12000 },

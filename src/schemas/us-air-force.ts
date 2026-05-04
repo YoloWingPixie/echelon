@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "us-air-force",
   name: "US Air Force",
   description: "Standard US Air Force organizational structure",
+  group: "United States",
   echelons: [
     { label: "Major Command", slug: "majcom", level: 10, personnelDefault: 100000 },
     { label: "Numbered Air Force", slug: "naf", level: 9, personnelDefault: 40000 },

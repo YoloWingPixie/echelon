@@ -31,6 +31,7 @@ export interface EchelonSchema {
   id: string;
   name: string;
   description?: string;
+  group?: string;
   echelons: EchelonEntry[];
 }
 

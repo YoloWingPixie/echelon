@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "pmc",
   name: "Generic PMC",
   description: "A generalized theoretical operational structure for Private Military Companies, focusing on deployable units.",
+  group: "International",
   echelons: [
     { label: "Operational HQ", slug: "ophq", level: 10, personnelDefault: 2000 },
     { label: "Sector Command", slug: "sctcmd", level: 9, personnelDefault: 800 },

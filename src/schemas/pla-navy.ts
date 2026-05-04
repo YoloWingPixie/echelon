@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "pla-navy",
   name: "PLA Navy",
   description: "Standard Chinese People's Liberation Army Navy (PLAN) organizational structure",
+  group: "China",
   echelons: [
     { label: "Fleet", slug: "flt", level: 10, personnelDefault: 40000 },
     { label: "Naval Base", slug: "nb", level: 9, personnelDefault: 15000 },

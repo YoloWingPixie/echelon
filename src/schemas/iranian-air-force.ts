@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "iranian-air-force",
   name: "Iranian Air Force (IRIAF)",
   description: "Islamic Republic of Iran Air Force",
+  group: "Iran",
   echelons: [
     { label: "Air Command", slug: "acmd", level: 10, personnelDefault: 37000 },
     { label: "Tactical Air Base", slug: "tab", level: 7, personnelDefault: 2500 },

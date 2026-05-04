@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "egyptian-army",
   name: "Egyptian Army",
   description: "Standard Egyptian Army organizational structure.",
+  group: "Egypt",
   echelons: [
     { label: "Field Army", slug: "fa", level: 10, personnelDefault: 100000 },
     { label: "Corps", slug: "cps", level: 9, personnelDefault: 40000 },

@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "us-navy",
   name: "US Navy",
   description: "Standard US Navy organizational structure",
+  group: "United States",
   echelons: [
     { label: "Fleet", slug: "flt", level: 10, personnelDefault: 50000 },
     // Navy Task Forces vary wildly — a CSG-sized task force lands near

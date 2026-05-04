@@ -3,6 +3,7 @@ import type { EchelonSchema } from "../types";
 const schema: EchelonSchema = {
   id: "generic",
   name: "Generic",
+  group: "International",
   echelons: [
     { label: "Theater", slug: "th", level: 10, personnelDefault: 100000 },
     { label: "Corps", slug: "corps", level: 9, personnelDefault: 40000 },

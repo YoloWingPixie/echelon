@@ -21,6 +21,7 @@ export interface MenuItem {
   danger?: boolean;
   active?: boolean;
   separator?: boolean;
+  groupHeader?: boolean;
   id?: string;
 }
 
@@ -159,19 +160,24 @@ export function Menu({ trigger, items, align = "start", label }: MenuProps) {
         triggerNode?.focus();
       }
     };
-    const onResize = () => {
+    const onDismiss = () => {
       setOpen(false);
       setFocusIdx(-1);
     };
+    const onScroll = (e: Event) => {
+      const menu = menuRef.current;
+      if (menu && e.target instanceof Node && menu.contains(e.target)) return;
+      onDismiss();
+    };
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("keydown", onKey, true);
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
+    window.addEventListener("resize", onDismiss);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
+      window.removeEventListener("resize", onDismiss);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open, triggerNode]);
 
@@ -239,6 +245,16 @@ export function Menu({ trigger, items, align = "start", label }: MenuProps) {
                   className="menu__separator"
                   role="separator"
                 />
+              );
+            }
+            if (item.groupHeader) {
+              return (
+                <div
+                  key={item.id ?? `gh-${i}`}
+                  className="menu__group-header"
+                >
+                  {item.label}
+                </div>
               );
             }
             const disabled = !item.onClick;

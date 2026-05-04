@@ -779,11 +779,26 @@ function EditorBody({
               <option value="">
                 {getSchema(state.schemaId).name} (document default)
               </option>
-              {SCHEMAS.filter((s) => s.id !== state.schemaId).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
+              {(() => {
+                const filtered = SCHEMAS.filter((s) => s.id !== state.schemaId);
+                const groups: { group: string; schemas: typeof filtered }[] = [];
+                for (const s of filtered) {
+                  const g = s.group ?? "";
+                  const last = groups[groups.length - 1];
+                  if (last && last.group === g) {
+                    last.schemas.push(s);
+                  } else {
+                    groups.push({ group: g, schemas: [s] });
+                  }
+                }
+                return groups.map((g) => (
+                  <optgroup key={g.group} label={g.group}>
+                    {g.schemas.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                ));
+              })()}
             </select>
           </label>
           <label className="field field--wide editor__checkbox-field">

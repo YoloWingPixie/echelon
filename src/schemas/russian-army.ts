@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "russian-army",
   name: "Russian Ground Forces",
   description: "Standard Russian Ground Forces organizational structure",
+  group: "Russia",
   echelons: [
     { label: "Army", slug: "army", level: 10, personnelDefault: 60000 },
     { label: "Division", slug: "div", level: 8, personnelDefault: 14000 },

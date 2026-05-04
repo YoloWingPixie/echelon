@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "russian-air-force",
   name: "Russian Aerospace Forces (Air Force)",
   description: "Standard Russian Air Force organizational structure",
+  group: "Russia",
   echelons: [
     { label: "Air Army", slug: "aa", level: 10, personnelDefault: 40000 },
     { label: "Division", slug: "div", level: 8, personnelDefault: 14000 },

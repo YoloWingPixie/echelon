@@ -3417,6 +3417,8 @@ button {
   z-index: 2000;
   min-width: 240px;
   max-width: 360px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
@@ -3520,6 +3522,16 @@ button {
   height: 1px;
   background: var(--border);
   margin: 4px 2px;
+}
+
+.menu__group-header {
+  padding: 6px 12px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  cursor: default;
 }
 
 /* ----- Segmented control (Tree / Library view toggle) ----- */

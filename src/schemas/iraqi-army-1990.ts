@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "iraqi-army-1990",
   name: "Iraqi Army, 1990",
   description: "Standard Iraqi Army organizational structure circa 1990 (including Republican Guard considerations).",
+  group: "Iraq",
   echelons: [
     { label: "Corps", slug: "corps", level: 9, personnelDefault: 40000 },
     { label: "Division", slug: "div", level: 8, personnelDefault: 14000 },

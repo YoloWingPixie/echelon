@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "nato-command",
   name: "NATO Command",
   description: "NATO integrated command and force structure echelons",
+  group: "International",
   echelons: [
     { label: "Supreme Headquarters", slug: "shq", level: 11, personnelDefault: 500000 },
     { label: "Army Group", slug: "ag", level: 10, personnelDefault: 200000 },

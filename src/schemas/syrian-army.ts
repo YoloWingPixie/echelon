@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "syrian-army",
   name: "Syrian Arab Army",
   description: "Standard Syrian Arab Army organizational structure",
+  group: "Syria",
   echelons: [
     { label: "Corps", slug: "corps", level: 9, personnelDefault: 40000 },
     { label: "Division", slug: "div", level: 8, personnelDefault: 14000 },

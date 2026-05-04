@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "us-army",
   name: "US Army",
   description: "Standard US Army organizational structure",
+  group: "United States",
   echelons: [
     { label: "Field Army", slug: "fa", level: 10, personnelDefault: 100000 },
     { label: "Corps", slug: "corps", level: 9, personnelDefault: 40000 },

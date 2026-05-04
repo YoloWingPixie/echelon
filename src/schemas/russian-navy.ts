@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "russian-navy",
   name: "Russian Navy",
   description: "Standard Russian Navy organizational structure",
+  group: "Russia",
   echelons: [
     { label: "Fleet", slug: "flt", level: 10, personnelDefault: 25000 },
     { label: "Flotilla", slug: "flot", level: 9, personnelDefault: 8000 },

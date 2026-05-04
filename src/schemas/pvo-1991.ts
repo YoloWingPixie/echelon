@@ -4,6 +4,7 @@ const schema: EchelonSchema = {
   id: "pvo-1991",
   name: "PVO (Air Defense Forces), 1991",
   description: "Standard PVO organizational structure",
+  group: "Soviet Union",
   // Slugs follow the russian-transliterated convention used by
   // soviet-vvs-1991 and russian-navy (apvo = armiya PVO, zrp = zenitno-
   // raketnyi polk, zrdn = zenitno-raketnyi divizion, etc.) rather than
