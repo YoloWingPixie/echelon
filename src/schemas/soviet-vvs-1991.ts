@@ -12,6 +12,7 @@ const schema: EchelonSchema = {
     { label: "Bomber Aviation Regiment", slug: "bap", level: 7, personnelDefault: 3500 },
     { label: "Ground Attack Aviation Regiment", slug: "shap", level: 7, personnelDefault: 3500 },
     { label: "Fighter-Bomber Aviation Regiment", slug: "apib", level: 7, personnelDefault: 3500 },
+    { label: "Mixed Aviation Regiment", slug: "sap", level: 7, personnelDefault: 3000 },
     { label: "Reconnaissance Aviation Regiment", slug: "rap", level: 7, personnelDefault: 2500 },
     { label: "Transport Aviation Regiment", slug: "vtap", level: 7, personnelDefault: 2000 },
     { label: "Comms & Control Regiment", slug: "ops", level: 7, personnelDefault: 1500 },

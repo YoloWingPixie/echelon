@@ -458,11 +458,19 @@ function UnitCardInner({
               ) : null}
               {unit.notes ? (
                 <span
-                  className="unit-card__notes-indicator"
+                  className="unit-card__chip unit-card__notes-indicator"
                   title={unit.notes}
                   aria-label="This unit has notes"
                 >
                   NOTE
+                </span>
+              ) : null}
+              {unit.callsign ? (
+                <span
+                  className="unit-card__chip unit-card__callsign"
+                  title={`Callsign: ${unit.callsign}`}
+                >
+                  {unit.callsign}
                 </span>
               ) : null}
             </div>

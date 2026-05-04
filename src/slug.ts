@@ -33,7 +33,12 @@ export function unitSegment(unit: Unit, schemaId: string): string {
   const echelonSlug = unit.hideEchelonSlug
     ? ""
     : getEchelonSlug(schemaId, unit.echelon);
-  const designator = sanitizeShort(unit.short ?? "");
+  // "/" separates a unit from its parent in military notation (e.g.
+  // "B/1-12", "I./JG-2"). Only the part before the slash is this
+  // unit's own designator — the rest duplicates the parent chain.
+  const raw = unit.short ?? "";
+  const own = raw.includes("/") ? raw.split("/")[0] : raw;
+  const designator = sanitizeShort(own);
   if (!designator && !echelonSlug) return "";
   if (echelonSlug && designator.length > echelonSlug.length) {
     // Suffix: always dedupe — appending would stutter (e.g. "fofmtfk" + "fmtfk").

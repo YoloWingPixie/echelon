@@ -95,6 +95,7 @@ interface FormState {
   schemaOverride: string;
   hidePrefix: boolean;
   hideEchelonSlug: boolean;
+  callsign: string;
 }
 
 function blankForm(defaultEchelon: Echelon): FormState {
@@ -116,6 +117,7 @@ function blankForm(defaultEchelon: Echelon): FormState {
     schemaOverride: "",
     hidePrefix: false,
     hideEchelonSlug: false,
+    callsign: "",
   };
 }
 
@@ -149,6 +151,7 @@ function formFromUnit(u: Unit): FormState {
     schemaOverride: u.schemaOverride ?? "",
     hidePrefix: u.hidePrefix ?? false,
     hideEchelonSlug: u.hideEchelonSlug ?? false,
+    callsign: u.callsign ?? "",
   };
 }
 
@@ -176,6 +179,7 @@ function formToFields(f: FormState): UnitFields {
     schemaOverride: normalizeOptionalString(f.schemaOverride),
     hidePrefix: f.hidePrefix || undefined,
     hideEchelonSlug: f.hideEchelonSlug || undefined,
+    callsign: normalizeOptionalString(f.callsign),
   };
 }
 
@@ -548,6 +552,16 @@ function EditorBody({
             value={form.short}
             onChange={(e) => setForm((f) => ({ ...f, short: e.target.value }))}
             placeholder="e.g. B/1-12, 2-506 IN, 75th"
+          />
+        </label>
+        <label className="field">
+          <span className="field__label">Callsign</span>
+          <input
+            className="field__input"
+            type="text"
+            value={form.callsign}
+            onChange={(e) => setForm((f) => ({ ...f, callsign: e.target.value }))}
+            placeholder="e.g. VIPER, HAMMER 1-1"
           />
         </label>
         <label className="field">

@@ -1250,20 +1250,29 @@ button {
 /* Notes indicator — tiny chip sitting next to the echelon label on cards
    whose unit carries notes. Full text lives in the element's title tooltip;
    the chip itself is intentionally compact so the card stays dense. */
-.unit-card__notes-indicator {
+.unit-card__chip {
   display: inline-block;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text-soft);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
   border-radius: 3px;
   padding: 0 4px;
   line-height: 14px;
   white-space: nowrap;
+}
+
+.unit-card__notes-indicator {
+  color: var(--text-soft);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   cursor: help;
+}
+
+.unit-card__callsign {
+  color: var(--info);
+  background: var(--info-soft);
+  border: 1px solid var(--info);
 }
 
 /* Kit rollup: small uppercase summary on top, up to two highlight lines

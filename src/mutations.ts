@@ -765,6 +765,7 @@ export function pasteSubtree(
       ...(src.schemaOverride ? { schemaOverride: src.schemaOverride } : {}),
       ...(src.hidePrefix ? { hidePrefix: src.hidePrefix } : {}),
       ...(src.hideEchelonSlug ? { hideEchelonSlug: src.hideEchelonSlug } : {}),
+      ...(src.callsign ? { callsign: src.callsign } : {}),
     };
     next.units[newId] = copy;
   }
@@ -865,6 +866,7 @@ export function injectUnits(
       ...(src.schemaOverride ? { schemaOverride: src.schemaOverride } : {}),
       ...(src.hidePrefix ? { hidePrefix: src.hidePrefix } : {}),
       ...(src.hideEchelonSlug ? { hideEchelonSlug: src.hideEchelonSlug } : {}),
+      ...(src.callsign ? { callsign: src.callsign } : {}),
     };
     next.units[newId] = copy;
 

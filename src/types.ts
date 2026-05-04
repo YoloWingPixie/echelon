@@ -208,6 +208,9 @@ export interface Unit {
   // segment. Propagates to all descendants since their parent chain includes
   // this unit's segment.
   hideEchelonSlug?: boolean;
+  // Optional tactical callsign (e.g. "VIPER", "HAMMER 1-1"). Stored as
+  // entered; the card renders it uppercase via CSS text-transform.
+  callsign?: string;
 }
 
 export interface State {
