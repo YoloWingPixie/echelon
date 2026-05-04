@@ -78,6 +78,7 @@ import { tryCopyToClipboard } from "./clipboard";
 import { createSave, overwriteSave } from "./savedOrbats";
 import { normalizeLoadedState } from "./storage";
 import { parseClipboardText, detectCollisions, type Collision } from "./pasteUnits";
+import { DeleteSubtreeDialog } from "./components/DeleteSubtreeDialog";
 import { PasteConfirmDialog } from "./components/PasteConfirmDialog";
 import { toYaml } from "./yamlFormat";
 import { exportSubtreeJson, exportSubtreeYaml, exportSubtreeMarkdown, exportSubtreePng, exportSubtreePngTransparent } from "./exportSubtree";
@@ -142,6 +143,9 @@ function App() {
   // The currently active save slot. Set when the user saves or loads an ORBAT.
   // Ctrl+S quick-saves to this slot; null means "no slot, prompt for a name".
   const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
+
+  // Pending subtree delete: unit ID waiting for confirmation.
+  const [pendingDeleteSubtree, setPendingDeleteSubtree] = useState<string | null>(null);
 
   // Pending paste: units waiting for user confirmation due to collisions.
   const [pendingPaste, setPendingPaste] = useState<{
@@ -875,6 +879,28 @@ function App() {
     [api, flashStatus],
   );
 
+  const handleContextDeleteSubtree = useCallback(
+    (unitId: string) => {
+      setPendingDeleteSubtree(unitId);
+    },
+    [],
+  );
+
+  const handleConfirmDeleteSubtree = useCallback(() => {
+    if (!pendingDeleteSubtree) return;
+    const u = api.state.units[pendingDeleteSubtree];
+    const label = u ? u.name : "unit";
+    const count = descendantCountQ(api.state, pendingDeleteSubtree) + 1;
+    api.deleteSubtree(pendingDeleteSubtree);
+    setPendingDeleteSubtree(null);
+    setEditor({ kind: "closed" });
+    flashStatus(`Deleted "${label}" and ${count - 1} descendants.`);
+  }, [pendingDeleteSubtree, api, flashStatus]);
+
+  const handleCancelDeleteSubtree = useCallback(() => {
+    setPendingDeleteSubtree(null);
+  }, []);
+
   const handleExportSubtreeJson = useCallback((unitId: string) => {
     exportSubtreeJson(api.state, unitId);
   }, [api.state]);
@@ -1458,6 +1484,7 @@ function App() {
             onExportPng={() => ctxMenu.unitId && handleExportSubtreePng(ctxMenu.unitId)}
             onExportPngTransparent={() => ctxMenu.unitId && handleExportSubtreePngTransparent(ctxMenu.unitId)}
             onDelete={() => ctxMenu.unitId && handleContextDelete(ctxMenu.unitId)}
+            onDeleteSubtree={() => ctxMenu.unitId && handleContextDeleteSubtree(ctxMenu.unitId)}
             onToggleCollapsed={() =>
               ctxMenu.unitId && handleToggleCollapsedAction(ctxMenu.unitId)
             }
@@ -1483,6 +1510,13 @@ function App() {
           unitCount={pendingPaste ? Object.keys(pendingPaste.units).length : 0}
           onConfirm={handleConfirmPaste}
           onCancel={handleCancelPaste}
+        />
+        <DeleteSubtreeDialog
+          open={pendingDeleteSubtree !== null}
+          unitName={pendingDeleteSubtree ? (api.state.units[pendingDeleteSubtree]?.name ?? "unit") : ""}
+          totalCount={pendingDeleteSubtree ? descendantCountQ(api.state, pendingDeleteSubtree) + 1 : 0}
+          onConfirm={handleConfirmDeleteSubtree}
+          onCancel={handleCancelDeleteSubtree}
         />
       </div>
     </DndProvider>

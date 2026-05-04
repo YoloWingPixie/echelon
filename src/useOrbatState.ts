@@ -45,6 +45,7 @@ export interface OrbatApi {
   createUnit: (fields: UnitFields) => string; // returns new id
   updateUnit: (id: string, fields: Partial<UnitFields>) => void;
   deleteUnit: (id: string) => void;
+  deleteSubtree: (id: string) => void;
   moveTo: (id: string, newParentId: string | null) => { ok: boolean; reason?: string };
   moveToUnassigned: (id: string) => void;
   wouldCycle: (id: string, newParentId: string) => boolean;
@@ -165,6 +166,13 @@ export function useOrbatState(): OrbatApi {
   const deleteUnit = useCallback(
     (id: string) => {
       applyMutation((prev) => _deleteUnit(prev, id));
+    },
+    [applyMutation],
+  );
+
+  const deleteSubtree = useCallback(
+    (id: string) => {
+      applyMutation((prev) => _removeSubtree(prev, id));
     },
     [applyMutation],
   );
@@ -447,6 +455,7 @@ export function useOrbatState(): OrbatApi {
       createUnit,
       updateUnit,
       deleteUnit,
+      deleteSubtree,
       moveTo,
       moveToUnassigned,
       wouldCycle: wouldCycleBound,
@@ -481,6 +490,7 @@ export function useOrbatState(): OrbatApi {
       createUnit,
       updateUnit,
       deleteUnit,
+      deleteSubtree,
       moveTo,
       moveToUnassigned,
       wouldCycleBound,

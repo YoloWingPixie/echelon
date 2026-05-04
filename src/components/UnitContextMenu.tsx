@@ -27,6 +27,7 @@ export interface UnitContextMenuProps {
   onExportPng: () => void;
   onExportPngTransparent: () => void;
   onDelete: () => void;
+  onDeleteSubtree: () => void;
   onToggleCollapsed: () => void;
   onCollapseAll: () => void;
   onExpandAll: () => void;
@@ -56,6 +57,7 @@ export function UnitContextMenu(props: UnitContextMenuProps) {
     onExportPng,
     onExportPngTransparent,
     onDelete,
+    onDeleteSubtree,
     onToggleCollapsed,
     onCollapseAll,
     onExpandAll,
@@ -244,6 +246,16 @@ export function UnitContextMenu(props: UnitContextMenuProps) {
           >
             Delete
           </button>
+          {hasChildren ? (
+            <button
+              type="button"
+              className="ctx-menu__item ctx-menu__item--danger"
+              onClick={handle(onDeleteSubtree)}
+              role="menuitem"
+            >
+              Delete with children
+            </button>
+          ) : null}
     </div>
   );
 }

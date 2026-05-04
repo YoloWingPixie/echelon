@@ -66,6 +66,9 @@ export interface NodeLayout {
   children: NodeLayout[];
   columns?: NodeLayout[][];
   colTrunksX?: number[];
+  // Leaf children extracted from a fan row and stacked vertically at the edge.
+  leafPack?: NodeLayout[][];
+  leafPackTrunksX?: number[];
   collapsed: boolean;
 }
 
@@ -136,6 +139,20 @@ function buildNode(
     columns = chunkIntoColumns(childNodes, numCols);
   }
 
+  // Leaf-pack heuristic: when a fan node has a mix of branching children
+  // and multiple leaf children, extract the leaves into a vertical pack
+  // placed at the edge of the fan. This saves horizontal space.
+  let leafPack: NodeLayout[][] | undefined;
+  let fanChildren = childNodes;
+  if (mode === "fan" && childNodes.length > 2 && layoutPref === "auto") {
+    const branching = childNodes.filter((c) => c.layoutMode !== "leaf");
+    const leaves = childNodes.filter((c) => c.layoutMode === "leaf");
+    if (branching.length >= 1 && leaves.length >= 2) {
+      fanChildren = branching;
+      leafPack = [leaves];
+    }
+  }
+
   return {
     id,
     x: 0,
@@ -143,8 +160,9 @@ function buildNode(
     width: cfg.cardWidth,
     height: heights.get(id) ?? HEIGHT_FALLBACK,
     layoutMode: mode,
-    children: childNodes,
+    children: fanChildren,
     columns,
+    leafPack,
     collapsed,
   };
 }
@@ -172,7 +190,15 @@ function shiftSubtree(node: NodeLayout, dx: number): void {
   if (node.colTrunksX) {
     node.colTrunksX = node.colTrunksX.map((t) => t + dx);
   }
+  if (node.leafPackTrunksX) {
+    node.leafPackTrunksX = node.leafPackTrunksX.map((t) => t + dx);
+  }
   for (const c of node.children) shiftSubtree(c, dx);
+  if (node.leafPack) {
+    for (const col of node.leafPack) {
+      for (const c of col) shiftSubtree(c, dx);
+    }
+  }
 }
 
 function layoutStack(
@@ -216,10 +242,53 @@ function layoutFan(
     cursorX = bb.maxX + cfg.fanGapX;
   }
 
-  // Parent center = child card-centers' midpoint, so the bar from
-  // parent-stem to the first/last child-center is symmetric.
-  const first = node.children[0];
-  const last = node.children[node.children.length - 1];
+  // Layout leaf-pack columns at the right edge of the fan.
+  let leafPackMaxY = childY;
+  if (node.leafPack && node.leafPack.length > 0) {
+    // Compute the max depth of branching children to cap leaf columns.
+    const branchMaxY = childBBs.length > 0
+      ? Math.max(...childBBs.map((bb) => bb.maxY))
+      : childY + HEIGHT_FALLBACK;
+    const availableDepth = branchMaxY - childY;
+
+    // Re-chunk leaves into columns that fit within availableDepth.
+    // If available depth is too shallow (e.g. all branches collapsed),
+    // guarantee at least 3 leaves per column to avoid sprawl.
+    const allLeaves = node.leafPack.flat();
+    const perLeafH = (allLeaves[0]?.height ?? HEIGHT_FALLBACK) + cfg.stackGapY;
+    const maxPerCol = Math.max(3, Math.floor(availableDepth / perLeafH));
+    const numCols = Math.ceil(allLeaves.length / maxPerCol);
+    node.leafPack = chunkIntoColumns(allLeaves, numCols);
+
+    const trunksX: number[] = [];
+    for (const col of node.leafPack) {
+      const trunkX = cursorX;
+      trunksX.push(trunkX);
+      const leafX = trunkX + cfg.stackStubW;
+      let leafY = childY;
+      let colRight = trunkX + cfg.stackStubW + cfg.cardWidth;
+      for (const leaf of col) {
+        leaf.x = leafX;
+        leaf.y = leafY;
+        colRight = Math.max(colRight, leafX + leaf.width);
+        leafY += leaf.height + cfg.stackGapY;
+        leafPackMaxY = Math.max(leafPackMaxY, leafY - cfg.stackGapY);
+      }
+      cursorX = colRight + cfg.mcColGap;
+    }
+    node.leafPackTrunksX = trunksX;
+  }
+
+  // Parent center = child card-centers' midpoint. Include leaf pack in
+  // the centering calculation.
+  const allPositioned = [...node.children];
+  if (node.leafPack) {
+    for (const col of node.leafPack) {
+      if (col.length > 0) allPositioned.push(col[0]);
+    }
+  }
+  const first = allPositioned[0];
+  const last = allPositioned[allPositioned.length - 1];
   const cardsMidX =
     (first.x + first.width / 2 + last.x + last.width / 2) / 2;
   node.x = cardsMidX - node.width / 2;
@@ -229,16 +298,30 @@ function layoutFan(
     const dx = x - node.x;
     node.x += dx;
     shiftAllChildren(node.children, childBBs, dx);
+    if (node.leafPack) {
+      for (const col of node.leafPack) {
+        for (const leaf of col) shiftSubtree(leaf, dx);
+      }
+      if (node.leafPackTrunksX) {
+        node.leafPackTrunksX = node.leafPackTrunksX.map((t) => t + dx);
+      }
+    }
   }
 
-  const minX = Math.min(node.x, childBBs[0].minX);
-  const maxX = Math.max(
+  const minX = Math.min(node.x, childBBs[0]?.minX ?? node.x);
+  let maxX = Math.max(
     node.x + node.width,
-    childBBs[childBBs.length - 1].maxX,
+    childBBs.length > 0 ? childBBs[childBBs.length - 1].maxX : node.x + node.width,
   );
+  if (node.leafPack) {
+    for (const col of node.leafPack) {
+      for (const leaf of col) maxX = Math.max(maxX, leaf.x + leaf.width);
+    }
+  }
   const maxY = Math.max(
     node.y + node.height,
     ...childBBs.map((bb) => bb.maxY),
+    leafPackMaxY,
   );
   return { minX, maxX, maxY };
 }
@@ -330,11 +413,18 @@ function pushConnectors(
     const stemY1 = stemY0 + cfg.fanStemDownH;
     out.push({ x1: stemX, y1: stemY0, x2: stemX, y2: stemY1 });
 
-    if (node.children.length > 0) {
-      const first = node.children[0];
-      const last = node.children[node.children.length - 1];
-      const barLeftX = first.x + first.width / 2;
-      const barRightX = last.x + last.width / 2;
+    // Collect all fan-bar endpoints: regular children + leaf pack columns.
+    const barPoints: number[] = [];
+    for (const child of node.children) {
+      barPoints.push(child.x + child.width / 2);
+    }
+    if (node.leafPack && node.leafPackTrunksX) {
+      for (const tx of node.leafPackTrunksX) barPoints.push(tx);
+    }
+
+    if (barPoints.length > 0) {
+      const barLeftX = Math.min(...barPoints);
+      const barRightX = Math.max(...barPoints);
       out.push({ x1: barLeftX, y1: stemY1, x2: barRightX, y2: stemY1 });
 
       for (const child of node.children) {
@@ -342,7 +432,30 @@ function pushConnectors(
         out.push({ x1: cx, y1: stemY1, x2: cx, y2: child.y });
       }
     }
+
+    // Leaf-pack connectors: vertical trunk per column + horizontal stubs.
+    if (node.leafPack && node.leafPackTrunksX) {
+      for (let i = 0; i < node.leafPack.length; i++) {
+        const col = node.leafPack[i];
+        const trunkX = node.leafPackTrunksX[i];
+        if (col.length === 0) continue;
+        const trunkTopY = stemY1;
+        const lastLeaf = col[col.length - 1];
+        const trunkBottomY = lastLeaf.y + lastLeaf.height / 2;
+        out.push({ x1: trunkX, y1: trunkTopY, x2: trunkX, y2: trunkBottomY });
+        for (const leaf of col) {
+          const stubY = leaf.y + leaf.height / 2;
+          out.push({ x1: trunkX, y1: stubY, x2: leaf.x, y2: stubY });
+        }
+      }
+    }
+
     for (const c of node.children) pushConnectors(c, out, cfg);
+    if (node.leafPack) {
+      for (const col of node.leafPack) {
+        for (const c of col) pushConnectors(c, out, cfg);
+      }
+    }
     return;
   }
 
@@ -408,6 +521,11 @@ function pushConnectors(
 function flatten(node: NodeLayout, out: NodeLayout[]): void {
   out.push(node);
   for (const c of node.children) flatten(c, out);
+  if (node.leafPack) {
+    for (const col of node.leafPack) {
+      for (const c of col) flatten(c, out);
+    }
+  }
 }
 
 export function layoutTreeBounds(
